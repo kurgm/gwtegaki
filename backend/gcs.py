@@ -23,7 +23,7 @@ INDEX_BLOB_NAME = os.environ['INDEX_BLOB_NAME']
 
 def get_index_dir():
     directory = tempfile.TemporaryDirectory()
-    # with open('../model/anng.tar.gz', 'rb') as tf:
+    # with open('../model/dataset.tar.gz', 'rb') as tf:
     with download_blob(INDEX_BUCKET_NAME, INDEX_BLOB_NAME) as tf:
         with tarfile.open(fileobj=tf) as tar:
             assert all(
