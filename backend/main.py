@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 
 import json
+import logging
 import functools
-import os
 
-from search import NGTIndex, handle_query, read_names_list
+from search import handle_query
+from dataset import get_dataset
+
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 def cors_enabled(func):
@@ -41,22 +45,9 @@ def cors_enabled(func):
     return wrapper
 
 
-def load_dataset(datadirpath):
-    index = NGTIndex(os.path.join(datadirpath, 'anng'), read_only=True)
-    names_list = read_names_list(os.path.join(datadirpath, 'names.txt'))
-    return index, names_list
-
-
-if os.environ.get('HWR_INDEX_PATH'):
-    index, names_list = load_dataset(os.environ.get('HWR_INDEX_PATH'))
-else:
-    from gcs import get_index_dir
-    with get_index_dir() as indexdirpath:
-        index, names_list = load_dataset(indexdirpath)
-
-
 @cors_enabled
 def hwr_search(request):
+    index, names_list = get_dataset()
     query = request.values['query']
     try:
         result = handle_query(index, names_list, query)
