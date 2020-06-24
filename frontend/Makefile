@@ -1,0 +1,3 @@
+LDLIBS = -lzinnia
+
+all: zinnia

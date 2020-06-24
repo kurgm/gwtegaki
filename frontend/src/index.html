@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>グリフウィキ手書き検索</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="index.js"></script>
+</head>
+
+<body>
+  <h1>グリフウィキ手書き検索</h1>
+  <div id="app">
+    <div class="writing-area">
+      <canvas id="area" width="200" height="200"></canvas>
+      <div class="writing-tools">
+        <button id="clear">消去</button>
+        <button id="undo">戻す</button>
+      </div>
+    </div>
+    <div id="result"></div>
+  </div>
+  <div class="notes">
+    <ul>
+      <li>検索したい字を枠いっぱいに書きます。</li>
+      <li>ハネを書く必要はありません。</li>
+      <li>グリフデータと同じ画数で、同じ書き順で書くことが重要です。
+        <ul>
+          <li>「口」の2画目などは本来つなげて書きますが、横と縦の2回に分けて書きます。「口」は4画で、「阝」は4画で、「幺」は5画で書きます。</li>
+          <li>くにがまえ（囗）は先に外側の4画を書いてから内側を書きます。はこがまえ・かくしがまえ（匚・匸）なども同様に外側をすべて書いてから内側を書きます。</li>
+          <li>しんにょう（辶）、えんにょう（廴）などを先に書いてから、右上に乗るパーツを書きます。</li>
+          <li><small>グリフによってはデータの書き順・部品引用順がおかしいものがあります。いろいろな書き順を試行錯誤する必要があるかもしれません……。</small></li>
+        </ul>
+      </li>
+      <li>ユーザ占有グリフ、UCSの非漢字グリフ、hitsujun-グリフは検索対象から外しています。</li>
+      <li>最新版が削除されているグリフを部品として引用するグリフは正しく検索できないことがあります。</li>
+    </ul>
+  </div>
+</body>
+
+</html>

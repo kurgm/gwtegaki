@@ -1,0 +1,14 @@
+{
+  "name": "gwtegaki-model",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "build": "make"
+  },
+  "author": "Kurogoma",
+  "license": "MIT",
+  "dependencies": {
+    "progress": "^2.0.3",
+    "yargs": "^15.3.1"
+  }
+}
