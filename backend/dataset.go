@@ -13,30 +13,32 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync"
 
 	"cloud.google.com/go/storage"
 	"github.com/yahoojapan/gongt"
 )
 
-var datasetInited = false
+var datasetLoadOnce sync.Once
+
+func ensureDatasetInitialized() {
+	datasetLoadOnce.Do(func() {
+		err := loadDataset()
+		if err != nil {
+			log.Fatal(err)
+		}
+	})
+}
 
 func getNGTIndex() (*gongt.NGT, error) {
-	if !datasetInited {
-		if err := loadDataset(); err != nil {
-			return nil, err
-		}
-	}
+	ensureDatasetInitialized()
 	return gongt.Get(), nil
 }
 
 var _glyphlist []string
 
 func getGlyphList() ([]string, error) {
-	if !datasetInited {
-		if err := loadDataset(); err != nil {
-			return nil, err
-		}
-	}
+	ensureDatasetInitialized()
 	return _glyphlist, nil
 }
 
@@ -64,7 +66,6 @@ func loadDataset() error {
 	}
 	log.Println("glyph list loaded")
 
-	datasetInited = true
 	return nil
 }
 
