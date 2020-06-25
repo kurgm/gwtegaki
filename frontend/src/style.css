@@ -21,6 +21,15 @@
   background-color: #f0f0f0;
   display: grid;
   grid-template-columns: repeat(5, 52px);
+  position: relative;
+}
+
+#result .result-message {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 10px;
+  bottom: 10px;
 }
 
 #result img {

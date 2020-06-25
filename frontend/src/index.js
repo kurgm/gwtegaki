@@ -31,6 +31,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  /**
+   * @param {string} msg 
+   */
+  function showMessage(msg) {
+    while (resultDiv.firstChild) {
+      resultDiv.removeChild(resultDiv.firstChild);
+    }
+    const div = document.createElement('div');
+    div.className = 'result-message';
+    div.appendChild(document.createTextNode(msg));
+    resultDiv.appendChild(div);
+  }
+
   const ctx = canvas.getContext('2d');
   ctx.lineCap = 'round';
   ctx.lineWidth = 3;
@@ -78,6 +91,8 @@ document.addEventListener('DOMContentLoaded', () => {
     stroke = null;
   });
 
+  let firstSearch = true;
+
   /** @type {[number, number][][]} */
   let strokes = [];
   /** @type {Promise<Result[]>[]} */
@@ -89,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
     strokes = strokes.concat([stroke]);
     const theStrokes = strokes;
     const feature = strokes_to_feature_array(strokes);
-    searchResultPromises.push((async () => {
+    const searchResultPromise = (async () => {
       const API_URL = process.env.SEARCH_API_URL;
       const response = await fetch(API_URL, {
         method: 'POST',
@@ -107,7 +122,17 @@ document.addEventListener('DOMContentLoaded', () => {
         setResult(result);
       }
       return result;
-    })());
+    })();
+    searchResultPromise.catch((err) => {
+      if (strokes === theStrokes) {
+        showMessage(`エラー: ${err}`);
+      }
+    });
+    searchResultPromises.push(searchResultPromise);
+    if (firstSearch) {
+      firstSearch = false;
+      showMessage('検索中… (初回は読み込みに20〜30秒かかることがあります)');
+    }
   }
 
   function clear() {
