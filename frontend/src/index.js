@@ -8,12 +8,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const canvas = /** @type {HTMLCanvasElement} */(document.getElementById('area'));
   const resultDiv = /** @type {HTMLDivElement} */(document.getElementById('result'));
 
-  /** @param {[string, number][]} result */
+  /**
+   * @typedef {object} Result
+   * @property {string} name
+   * @property {number} distance
+   */
+  /** @param {Result[]} result */
   function setResult(result) {
     while (resultDiv.firstChild) {
       resultDiv.removeChild(resultDiv.firstChild);
     }
-    for (const [glyphName] of result) {
+    for (const { name: glyphName } of result) {
       const a = document.createElement('a');
       a.href = `https://glyphwiki.org/wiki/${glyphName}`;
       const img = document.createElement('img');
@@ -75,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /** @type {[number, number][][]} */
   let strokes = [];
-  /** @type {Promise<[string, number][]>[]} */
+  /** @type {Promise<Result[]>[]} */
   let searchResultPromises = [];
   function commitStroke() {
     if (!stroke) {
@@ -96,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!response.ok) {
         throw new Error("server fail");
       }
-      /** @type {[string, number][]} */
+      /** @type {Result[]} */
       const result = await response.json();
       if (strokes === theStrokes) {
         setResult(result);
@@ -121,7 +126,9 @@ document.addEventListener('DOMContentLoaded', () => {
     searchResultPromises.pop();
 
     redrawStrokes();
-    if (strokes.length > 0) {
+    if (strokes.length === 0) {
+      setResult([]);
+    } else {
       setResult(await searchResultPromises[searchResultPromises.length - 1]);
     }
   }

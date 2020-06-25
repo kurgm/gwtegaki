@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
-    "api": "HWR_INDEX_PATH=../model ../backend/main.py",
+    "api": "HWR_INDEX_PATH=../model go run ../backend/localtest/main.go",
     "dev": "parcel src/index.html",
     "build": "parcel build src/index.html --public-url .",
     "test": "echo \"Error: no test specified\" && exit 1",
