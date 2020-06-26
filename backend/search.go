@@ -20,8 +20,11 @@ func HandleQuery(values []float64) ([]SearchResult, error) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if len(values) != index.GetDim() {
-		return nil, errors.New("invalid value length")
+	if len(values) > index.GetDim() {
+		return nil, errors.New("too many feature values")
+	}
+	if len(values) < index.GetDim() {
+		values = append(values, make([]float64, index.GetDim()-len(values))...)
 	}
 
 	size := 20

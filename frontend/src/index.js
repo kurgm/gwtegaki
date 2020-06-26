@@ -104,6 +104,13 @@ document.addEventListener('DOMContentLoaded', () => {
     strokes = strokes.concat([stroke]);
     const theStrokes = strokes;
     const feature = strokes_to_feature_array(strokes);
+    let queryLength = feature.length;
+    for (; queryLength > 1; queryLength--) {
+      if (feature[queryLength - 1] !== 0) {
+        break;
+      }
+    }
+    const query = feature.slice(0, queryLength).join(' ');
     const searchResultPromise = (async () => {
       const API_URL = process.env.SEARCH_API_URL;
       const response = await fetch(API_URL, {
@@ -111,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: `query=${feature.join(' ')}`,
+        body: `query=${query}`,
       });
       if (!response.ok) {
         throw new Error("server fail");
