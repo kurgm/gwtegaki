@@ -2,7 +2,7 @@
 
 import 'regenerator-runtime/runtime';
 
-import { strokes_to_feature_array } from '../../model/feature';
+import { strokes_to_feature_array } from 'gwtegaki-model/feature';
 
 document.addEventListener('DOMContentLoaded', () => {
   const canvas = /** @type {HTMLCanvasElement} */(document.getElementById('area'));
