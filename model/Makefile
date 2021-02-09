@@ -13,7 +13,7 @@ features.txt: dump_newest_only.txt
 	$(NODE) build_feature.js $< names.txt $@
 
 dump_newest_only.txt:
-	wget -O - https://glyphwiki.org/dump.tar.gz | tar xvf - $@
+	wget -q -O - https://glyphwiki.org/dump.tar.gz | tar xvzf - $@
 
 clean:
 	-rm dump_newest_only.txt
