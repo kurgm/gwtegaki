@@ -1,4 +1,4 @@
-package backend
+package main
 
 import (
 	"encoding/json"
@@ -37,17 +37,17 @@ func HwrSearch(w http.ResponseWriter, r *http.Request) {
 	log.Printf("query: %s", query)
 	values, err := ParseQuery(query)
 	if err != nil {
-		http.Error(w, err.Error(), 400)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	result, err := HandleQuery(values)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	jsonBytes, err := json.Marshal(result)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Write(jsonBytes)
