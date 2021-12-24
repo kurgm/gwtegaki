@@ -1,7 +1,3 @@
-// @ts-check
-
-import 'regenerator-runtime/runtime';
-
 import { strokes_to_feature_array } from 'gwtegaki-model/feature';
 
 document.addEventListener('DOMContentLoaded', () => {
