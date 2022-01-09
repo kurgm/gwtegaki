@@ -8,6 +8,7 @@
   "author": "Kurogoma",
   "license": "MIT",
   "dependencies": {
+    "annoy": "^3.0.3",
     "progress": "^2.0.3",
     "yargs": "^17.3.1"
   }

@@ -2,14 +2,10 @@ NODE = node
 
 all: dataset.tar.gz
 
-dataset.tar.gz: anng
+dataset.tar.gz: features.ann
 	tar czvf $@ $^ names.txt
 
-anng: features.txt
-	-rm -r $@
-	ngt create -d `$(NODE) -p 'require("../model/feature").FEATURE_COLSIZE'` $@ $<
-
-features.txt: dump_newest_only.txt
+features.ann: dump_newest_only.txt
 	$(NODE) build_feature.js $< names.txt $@
 
 dump_newest_only.txt:
@@ -17,8 +13,7 @@ dump_newest_only.txt:
 
 clean:
 	-rm dump_newest_only.txt
-	-rm features.txt names.txt
-	-rm -r anng
+	-rm features.ann names.txt
 	-rm dataset.tar.gz
 
 .PHONY: all clean

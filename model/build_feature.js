@@ -11,7 +11,7 @@ const { _: [dumpfilepath, namesfilepath, featurefilepath] } = require('yargs')
   .check((argv) => argv._.length === 3)
   .argv;
 
-const { strokes_to_feature_array } = require('./feature');
+const { strokes_to_feature_array, FEATURE_COLSIZE } = require('./feature');
 
 /** @param {string} path */
 async function* readDump(path) {
@@ -304,37 +304,34 @@ function isTargetGlyph(name) {
   return true;
 }
 
+const Annoy = require('annoy');
+const annoyIndex = new Annoy(FEATURE_COLSIZE, 'Euclidean');
+
 const namesStream = fs.createWriteStream(namesfilepath);
 namesStream.on('error', (err) => {
   console.error(err);
   process.exit(1);
 });
-const featureStream = fs.createWriteStream(featurefilepath);
-featureStream.on('error', (err) => {
-  console.error(err);
-  process.exit(1);
-});
 
+let outputLineCount = 0;
 /**
  * @param {string} name
  * @param {number[]} feature
  */
 function outputFeature(name, feature) {
-  const namesLine = `${name}\n`
-  const featureLine = `${feature.map((value) => +value.toPrecision(7)).join(' ')}\n`;
+  const outputLineNumber = outputLineCount++;
+
+  const namesLine = `${name}\n`;
   namesStream.write(namesLine);
-  featureStream.write(featureLine);
+  annoyIndex.addItem(outputLineNumber, feature);
 }
 
 async function finishOutput() {
-  await Promise.all([
-    new Promise((resolve) => {
-      namesStream.end(resolve);
-    }),
-    new Promise((resolve) => {
-      featureStream.end(resolve);
-    }),
-  ]);
+  await new Promise((resolve) => {
+    namesStream.end(resolve);
+  });
+  annoyIndex.build(2);
+  annoyIndex.save(featurefilepath);
 }
 
 (async () => {
