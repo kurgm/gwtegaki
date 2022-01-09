@@ -120,7 +120,7 @@ exports.hwrSearch = enableCORS(async (req, res) => {
     return;
   }
 
-  if (req.query.warmup) {
+  if (req.path === '/warmup') {
     try {
       await loadDataset();
     } catch (e) {
@@ -129,6 +129,11 @@ exports.hwrSearch = enableCORS(async (req, res) => {
       return;
     }
     res.status(204).send('');
+    return;
+  }
+
+  if (req.path !== '/') {
+    res.status(404).send('');
     return;
   }
 
