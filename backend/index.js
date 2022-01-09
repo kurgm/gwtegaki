@@ -2,14 +2,16 @@
 
 const fs = require('fs');
 const events = require('events');
-const path = require('path');
 const readline = require('readline');
+
+const Annoy = require('annoy');
+
+const { getDataset } = require('./dataset');
 
 // TODO: replace magic number
 const dimension = 900;
 const currentModelVersion = '1';
 
-const Annoy = require('annoy');
 const annoyIndex = new Annoy(dimension, 'euclidean');
 
 /** @type {string[]} */
@@ -18,7 +20,7 @@ let glyphNames;
 let loaded = false;
 const loadDataset = async () => {
   if (!loaded) {
-    const indexPath = getDatasetDirectoryPath();
+    const dataset = await getDataset();
 
     /**
      * @param {string} path
@@ -38,23 +40,18 @@ const loadDataset = async () => {
       return result;
     };
 
-    glyphNames = await loadGlyphNames(path.join(indexPath, 'names.txt'));
+    try {
+      glyphNames = await loadGlyphNames(dataset.getEphemeralPath('names.txt'));
 
-    if (!annoyIndex.load(path.join(indexPath, 'features.ann'))) {
-      throw new Error('annoyIndex.load() failed');
+      if (!annoyIndex.load(dataset.getEphemeralPath('features.ann'))) {
+        throw new Error('annoyIndex.load() failed');
+      }
+    } finally {
+      dataset.cleanup();
     }
 
     loaded = true;
   }
-};
-
-/** @return {string} */
-const getDatasetDirectoryPath = () => {
-  const localPath = process.env.HWR_INDEX_PATH;
-  if (localPath) {
-    return localPath;
-  }
-  throw new Error('remote dataset not implemented yet!');
 };
 
 /**
