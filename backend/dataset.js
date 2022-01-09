@@ -4,6 +4,7 @@ const os = require('os');
 const fs = require('fs');
 const path = require('path');
 
+const { Storage } = require('@google-cloud/storage')
 const tar = require('tar');
 
 const DATASET_FILES = /** @type {const} */([
@@ -86,18 +87,28 @@ const createTargzDataset = (tarGzStream) => new Promise((resolve, reject) => {
 });
 
 /** @return {Promise<Dataset>} */
-exports.getDataset = async () => {
+exports.getDataset = () => {
   const localPath = process.env.HWR_INDEX_PATH;
   if (localPath) {
     console.debug('using local directory dataset:', localPath);
     return createLocalDirDataset(localPath);
   }
+
   const localTargzPath = process.env.HWR_INDEX_TARGZ_PATH;
   if (localTargzPath) {
-    console.debug('using tar.gz dataset:', localTargzPath);
+    console.debug('using local tar.gz dataset:', localTargzPath);
     const stream = fs.createReadStream(localTargzPath);
     return createTargzDataset(stream);
   }
-  // TODO
-  throw new Error('remote dataset not implemented yet!');
+
+  const bucketName = process.env.INDEX_BUCKET_NAME;
+  const blobName = process.env.INDEX_BLOB_NAME;
+  if (bucketName && blobName) {
+    console.debug('using GCS tar.gz dataset:', `gs://${bucketName}/${blobName}`);
+    const cloudStorage = new Storage();
+    const stream = cloudStorage.bucket(bucketName).file(blobName).createReadStream();
+    return createTargzDataset(stream);
+  }
+
+  throw new Error('no dataset available');
 };
