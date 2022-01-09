@@ -41,11 +41,15 @@ const loadDataset = async () => {
     };
 
     try {
+      console.debug('load namelist start');
       glyphNames = await loadGlyphNames(dataset.getEphemeralPath('names.txt'));
+      console.debug('load namelist complete');
 
+      console.debug('load annoy index start');
       if (!annoyIndex.load(dataset.getEphemeralPath('features.ann'))) {
         throw new Error('annoyIndex.load() failed');
       }
+      console.debug('load annoy index complete');
     } finally {
       dataset.cleanup();
     }
@@ -129,7 +133,7 @@ exports.hwrSearch = enableCORS(async (req, res) => {
   }
 
   const { query: queryStr, v = '1' } = req.body;
-  console.log(`query:`, queryStr);
+  console.debug(`query:`, queryStr);
   const query = parseQuery(queryStr);
   if (!query) {
     res.status(400).send("invalid parameter 'query'");
