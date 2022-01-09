@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: `query=${query}`,
+        body: `v=1&query=${query}`,
       });
       if (!response.ok) {
         throw new Error("server fail");
