@@ -44,7 +44,7 @@ class Dataset {
 
   cleanup() {
     this._cleaned = true;
-    this._cleanup();
+    this._cleanup?.();
   }
 
   /** @type {boolean} */
