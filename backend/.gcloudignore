@@ -12,5 +12,3 @@
 # below:
 .git
 .gitignore
-
-localtest
