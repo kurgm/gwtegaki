@@ -8,54 +8,79 @@ const Annoy = require('annoy');
 
 const { getDataset } = require('./dataset');
 
-// TODO: replace magic number
-const dimension = 900;
-const currentModelVersion = '1';
+/**
+ * @typedef DatasetMeta
+ * @property {number} dumpTime
+ * @property {number} numItems
+ * @property {string} v
+ * @property {number} dimen
+ * @property {string} metric
+ */
 
-const annoyIndex = new Annoy(dimension, 'euclidean');
-
+/** @type {DatasetMeta} */
+let datasetMeta;
+/** @type {Annoy} */
+let annoyIndex;
 /** @type {string[]} */
 let glyphNames;
 
-let loaded = false;
-const loadDataset = async () => {
-  if (!loaded) {
+/** @type {Promise<void> | null} */
+let loadPromise = null;
+/** @return {Promise<void>} */
+const loadDataset = () => {
+  if (loadPromise) {
+    return loadPromise;
+  }
+  return loadPromise = (async () => {
     const dataset = await getDataset();
 
     /**
      * @param {string} path
+     * @return {Promise<DatasetMeta>}
+     */
+    const loadMetadata = async (path) => {
+      return JSON.parse(await fs.promises.readFile(path, "utf-8"));
+    };
+    /**
+     * @param {string} path
+     * @param {number} size
      * @return {Promise<string[]>}
      */
-    const loadGlyphNames = async (path) => {
+    const loadGlyphNames = async (path, size) => {
       const inputStream = fs.createReadStream(path);
       const inputRL = readline.createInterface({
         input: inputStream,
         crlfDelay: Infinity,
       });
-      const result = [];
+      /** @type {string[]} */
+      const result = Array(size);
+      let index = 0;
       inputRL.on('line', (input) => {
-        result.push(input.trim());
+        result[index++] = input;
       });
       await events.once(inputRL, 'close');
       return result;
     };
 
     try {
+      console.debug('load metadata start');
+      datasetMeta = await loadMetadata(dataset.getEphemeralPath('metadata.json'));
+      console.debug('load metadata complete');
+
       console.debug('load namelist start');
-      glyphNames = await loadGlyphNames(dataset.getEphemeralPath('names.txt'));
+      glyphNames = await loadGlyphNames(dataset.getEphemeralPath('names.txt'), datasetMeta.numItems);
       console.debug('load namelist complete');
 
       console.debug('load annoy index start');
+      annoyIndex = new Annoy(datasetMeta.dimen, datasetMeta.metric);
       if (!annoyIndex.load(dataset.getEphemeralPath('features.ann'))) {
         throw new Error('annoyIndex.load() failed');
       }
       console.debug('load annoy index complete');
     } finally {
-      dataset.cleanup();
+      dataset?.cleanup();
     }
-
-    loaded = true;
-  }
+  })();
 };
 
 /**
@@ -71,7 +96,7 @@ const loadDataset = async () => {
 const performSearch = (query) => {
   const numNeighbors = 20;
   const searchK = numNeighbors * 20;
-  /** @type {{ neighbors: number[]; distances: number[]; }} */
+  query = resizeQuery(query, datasetMeta.dimen);
   const annoyResult = annoyIndex.getNNsByVector(query, numNeighbors, searchK, true);
   if (!annoyResult) {
     throw new Error('annoyIndex.getNNsByVector() failed');
@@ -128,7 +153,11 @@ exports.hwrSearch = enableCORS(async (req, res) => {
       res.status(500).send('failed to load index');
       return;
     }
-    res.status(204).send('');
+    res.status(200).json({
+      dumpTime: datasetMeta.dumpTime,
+      numItems: datasetMeta.numItems,
+      v: datasetMeta.v,
+    });
     return;
   }
 
@@ -144,13 +173,13 @@ exports.hwrSearch = enableCORS(async (req, res) => {
     res.status(400).send("invalid parameter 'query'");
     return;
   }
-  if (v !== currentModelVersion) {
-    res.status(404).send("invalid parameter 'v'");
-    return;
-  }
   let result;
   try {
     await loadDataset();
+    if (v !== datasetMeta.v) {
+      res.status(404).send("invalid parameter 'v'");
+      return;
+    }
     result = performSearch(query);
   } catch (e) {
     console.error(e);
@@ -172,8 +201,17 @@ const parseQuery = (queryStr) => {
   if (query.some((item) => isNaN(item) || !Number.isFinite(item))) {
     return null;
   }
-  if (query.length < dimension) {
-    query.push(...Array(dimension - query.length).fill(0));
+  return query;
+};
+
+/**
+ * @param {number[]} query
+ * @param {number} size
+ * @return {number[]}
+ */
+const resizeQuery = (query, size) => {
+  if (query.length < size) {
+    query = query.concat(Array(size - query.length).fill(0));
   }
-  return query.slice(0, dimension);
-}
+  return query.slice(0, size);
+};

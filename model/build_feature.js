@@ -5,14 +5,15 @@
 const fs = require('fs');
 const readline = require('readline');
 
+const Annoy = require('annoy');
 const ProgressBar = require('progress');
 
-const { dumpfilepath, namesfilepath, featurefilepath } = require('yargs')
-  .command("* <dumpfilepath> <namesfilepath> <featurefilepath>", "Build feature index and name list file from dump")
-  .string(["dumpfilepath", "namesfilepath", "featurefilepath"])
+const { dumpfilepath, namesfilepath, featurefilepath, metadatafilepath } = require('yargs')
+  .command("* <dumpfilepath> <namesfilepath> <featurefilepath> <metadatafilepath>", "Build feature index and name list file from dump")
+  .string(["dumpfilepath", "namesfilepath", "featurefilepath", "metadatafilepath"])
   .parseSync();
 
-const { strokes_to_feature_array, FEATURE_COLSIZE } = require('./feature');
+const { strokes_to_feature_array, FEATURE_COLSIZE, modelVersion } = require('./feature');
 
 /** @param {string} path */
 async function* readDump(path) {
@@ -305,8 +306,8 @@ function isTargetGlyph(name) {
   return true;
 }
 
-const Annoy = require('annoy');
-const annoyIndex = new Annoy(FEATURE_COLSIZE, 'Euclidean');
+const modelMetric = 'Euclidean';
+const annoyIndex = new Annoy(FEATURE_COLSIZE, modelMetric);
 
 const namesStream = fs.createWriteStream(namesfilepath);
 namesStream.on('error', (err) => {
@@ -333,6 +334,18 @@ async function finishOutput() {
   });
   annoyIndex.build(10);
   annoyIndex.save(featurefilepath);
+  fs.writeFileSync(metadatafilepath, JSON.stringify(getMetadata()), { encoding: "utf-8" });
+}
+
+
+function getMetadata() {
+  return {
+    dumpTime: fs.statSync(dumpfilepath).mtimeMs,
+    numItems: outputLineCount,
+    v: modelVersion,
+    dimen: FEATURE_COLSIZE,
+    metric: modelMetric,
+  };
 }
 
 (async () => {

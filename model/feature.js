@@ -1,5 +1,7 @@
 // @ts-check
 
+const modelVersion = "1";
+
 /**
  * @template T
  * @param {T[]} arr
@@ -188,4 +190,5 @@ module.exports = {
   raw_feature_to_array,
   strokes_to_feature_array,
   FEATURE_COLSIZE,
+  modelVersion,
 };

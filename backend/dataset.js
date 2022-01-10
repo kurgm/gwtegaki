@@ -10,6 +10,7 @@ const { Storage } = require('@google-cloud/storage')
 const DATASET_FILES = /** @type {const} */([
   'names.txt',
   'features.ann',
+  'metadata.json',
 ]);
 
 /** @typedef {(typeof DATASET_FILES)[number]} DatasetFileNames */
