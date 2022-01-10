@@ -330,7 +330,7 @@ async function finishOutput() {
   await new Promise((resolve) => {
     namesStream.end(resolve);
   });
-  annoyIndex.build(2);
+  annoyIndex.build(10);
   annoyIndex.save(featurefilepath);
 }
 

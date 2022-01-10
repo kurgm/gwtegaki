@@ -70,7 +70,7 @@ const loadDataset = async () => {
  */
 const performSearch = (query) => {
   const numNeighbors = 20;
-  const searchK = numNeighbors * 10;
+  const searchK = numNeighbors * 20;
   /** @type {{ neighbors: number[]; distances: number[]; }} */
   const annoyResult = annoyIndex.getNNsByVector(query, numNeighbors, searchK, true);
   if (!annoyResult) {
