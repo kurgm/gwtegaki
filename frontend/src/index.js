@@ -62,15 +62,17 @@ document.addEventListener('DOMContentLoaded', () => {
   let stroke = null;
 
   /**
-   * @param {MouseEvent} evt
+   * @typedef Coord
+   * @property {number} x
+   * @property {number} y
    */
-  function addToStroke(evt) {
+  /**
+   * @param {Coord} coord
+   */
+  function addToStroke({ x, y }) {
     if (!stroke) {
       return;
     }
-    const rect = canvas.getBoundingClientRect();
-    const x = Math.round((evt.clientX - rect.left) / (rect.right - rect.left) * 200);
-    const y = Math.round((evt.clientY - rect.top) / (rect.bottom - rect.top) * 200);
     stroke.push([x, y]);
     if (stroke.length >= 2) {
       const [sx, sy] = stroke[stroke.length - 2];
@@ -81,25 +83,46 @@ document.addEventListener('DOMContentLoaded', () => {
       ctx.stroke();
     }
   }
-  canvas.addEventListener('mousedown', (evt) => {
+
+  /**
+   * @param {MouseEvent | TouchEvent} evt
+   */
+  function getCoordFromEvent(evt) {
+    const rect = canvas.getBoundingClientRect();
+    const { clientX, clientY } = evt instanceof MouseEvent ? evt : evt.touches[0];
+    const x = Math.round((clientX - rect.left) / (rect.right - rect.left) * 200);
+    const y = Math.round((clientY - rect.top) / (rect.bottom - rect.top) * 200);
+    return { x, y };
+  }
+
+  /** @param {MouseEvent | TouchEvent} evt */
+  function startStrokeEventHandler(evt) {
     stroke = [];
-    addToStroke(evt);
+    addToStroke(getCoordFromEvent(evt));
     evt.preventDefault();
-  });
-  document.addEventListener('mousemove', (evt) => {
+  }
+  canvas.addEventListener('mousedown', startStrokeEventHandler);
+  canvas.addEventListener('touchstart', startStrokeEventHandler);
+  /** @param {MouseEvent | TouchEvent} evt */
+  function continueStrokeEventHandler(evt) {
     if (!stroke) {
       return;
     }
-    addToStroke(evt);
+    addToStroke(getCoordFromEvent(evt));
     evt.preventDefault();
-  });
-  document.addEventListener('mouseup', () => {
+  }
+  document.addEventListener('mousemove', continueStrokeEventHandler);
+  document.addEventListener('touchmove', continueStrokeEventHandler);
+  /** @param {MouseEvent | TouchEvent} evt */
+  function endStrokeEventHandler(evt) {
     if (!stroke) {
       return;
     }
     commitStroke();
     stroke = null;
-  });
+  }
+  document.addEventListener('mouseup', endStrokeEventHandler);
+  document.addEventListener('touchend', endStrokeEventHandler);
 
   const API_URL = process.env.SEARCH_API_URL;
 

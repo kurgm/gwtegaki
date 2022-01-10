@@ -1,6 +1,7 @@
 #app {
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
   justify-content: center;
 }
 
@@ -21,6 +22,7 @@
   background-color: #f0f0f0;
   display: grid;
   grid-template-columns: repeat(5, 52px);
+  min-height: 208px;
   position: relative;
 }
 
