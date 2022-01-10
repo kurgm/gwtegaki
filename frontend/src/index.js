@@ -109,10 +109,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     addToStroke(getCoordFromEvent(evt));
-    evt.preventDefault();
   }
-  document.addEventListener('mousemove', continueStrokeEventHandler);
-  document.addEventListener('touchmove', continueStrokeEventHandler);
+  document.addEventListener('mousemove', continueStrokeEventHandler, { passive: true });
+  document.addEventListener('touchmove', continueStrokeEventHandler, { passive: true });
   /** @param {MouseEvent | TouchEvent} evt */
   function endStrokeEventHandler(evt) {
     if (!stroke) {
@@ -121,8 +120,8 @@ document.addEventListener('DOMContentLoaded', () => {
     commitStroke();
     stroke = null;
   }
-  document.addEventListener('mouseup', endStrokeEventHandler);
-  document.addEventListener('touchend', endStrokeEventHandler);
+  document.addEventListener('mouseup', endStrokeEventHandler, { passive: true });
+  document.addEventListener('touchend', endStrokeEventHandler, { passive: true });
 
   const API_URL = process.env.SEARCH_API_URL;
 
