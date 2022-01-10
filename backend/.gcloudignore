@@ -13,4 +13,4 @@
 .git
 .gitignore
 
-localtest
+node_modules

@@ -40,6 +40,20 @@ document.addEventListener('DOMContentLoaded', () => {
     resultDiv.appendChild(div);
   }
 
+  /**
+   * @param {string} msg
+   */
+  function showMessageIfNoResult(msg) {
+    if (
+      resultDiv.firstChild &&
+      resultDiv.firstChild instanceof HTMLDivElement &&
+      !resultDiv.firstChild.classList.contains('result-message')
+    ) {
+      return;
+    }
+    showMessage(msg);
+  }
+
   const ctx = canvas.getContext('2d');
   ctx.lineCap = 'round';
   ctx.lineWidth = 3;
@@ -87,7 +101,51 @@ document.addEventListener('DOMContentLoaded', () => {
     stroke = null;
   });
 
-  let firstSearch = true;
+  const API_URL = process.env.SEARCH_API_URL;
+
+  /** @return {Promise<void>} */
+  async function apiWarmup() {
+    const response = await fetch(API_URL + 'warmup', {
+      method: 'POST',
+    });
+    if (!response.ok) {
+      const text = await response.text().catch((err) => String(err));
+      throw new Error(`server warmup error: ${text}`);
+    }
+  }
+
+  showMessage('サーバ起動中… (20〜30秒かかることがあります)');
+  const apiWarmupPromise = (async () => {
+    try {
+      await apiWarmup();
+    } catch (e) {
+      showMessageIfNoResult(`サーバ起動エラー: ${e}`);
+      return;
+    }
+    showMessageIfNoResult('準備完了');
+  })();
+
+  /**
+   * @param {string} query
+   * @return {Promise<Result[]>}
+   */
+  async function apiSearch(query) {
+    await apiWarmupPromise;
+
+    showMessageIfNoResult('検索中…');
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `v=1&query=${query}`,
+    });
+    if (!response.ok) {
+      const text = await response.text().catch((err) => String(err));
+      throw new Error(`search error: ${text}`);
+    }
+    return response.json();
+  }
 
   /** @type {[number, number][][]} */
   let strokes = [];
@@ -108,19 +166,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const query = feature.slice(0, queryLength).join(' ');
     const searchResultPromise = (async () => {
-      const API_URL = process.env.SEARCH_API_URL;
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: `query=${query}`,
-      });
-      if (!response.ok) {
-        throw new Error("server fail");
-      }
       /** @type {Result[]} */
-      const result = await response.json();
+      const result = await apiSearch(query);
       if (strokes === theStrokes) {
         setResult(result);
       }
@@ -132,10 +179,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
     searchResultPromises.push(searchResultPromise);
-    if (firstSearch) {
-      firstSearch = false;
-      showMessage('検索中… (初回は読み込みに20〜30秒かかることがあります)');
-    }
   }
 
   function clear() {
@@ -157,7 +200,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (strokes.length === 0) {
       setResult([]);
     } else {
-      setResult(await searchResultPromises[searchResultPromises.length - 1]);
+      /** @type {Result[]} */
+      let result;
+      try {
+        result = await searchResultPromises[searchResultPromises.length - 1];
+      } catch (err) {
+        return;
+      }
+      setResult(result);
     }
   }
   document.getElementById('undo').addEventListener('click', () => { undo(); });

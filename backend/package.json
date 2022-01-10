@@ -1,0 +1,17 @@
+{
+  "name": "gwtegaki-backend",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "start": "functions-framework --target=hwrSearch"
+  },
+  "author": "Kurogoma",
+  "license": "MIT",
+  "dependencies": {
+    "@google-cloud/storage": "^5.16.1",
+    "annoy": "^3.0.3"
+  },
+  "devDependencies": {
+    "@google-cloud/functions-framework": "^2.1.0"
+  }
+}
