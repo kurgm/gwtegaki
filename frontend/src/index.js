@@ -134,6 +134,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const text = await response.text().catch((err) => String(err));
       throw new Error(`server warmup error: ${text}`);
     }
+    /** @type {{ dumpTime: number; numItems: number; v: string; }} */
+    const meta = await response.json();
+    document.getElementById('meta_dump_time').textContent = `${new Date(meta.dumpTime).toLocaleString('ja-JP', { timeZoneName: 'short' })}時点で`;
+    document.getElementById('meta_nglyphs').textContent = `のうち${meta.numItems}個`;
   }
 
   showMessage('サーバ起動中… (20〜30秒かかることがあります)');
