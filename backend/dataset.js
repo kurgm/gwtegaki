@@ -1,11 +1,11 @@
 // @ts-check
 
 const os = require('os');
+const child_process = require('child_process')
 const fs = require('fs');
 const path = require('path');
 
 const { Storage } = require('@google-cloud/storage')
-const tar = require('tar');
 
 const DATASET_FILES = /** @type {const} */([
   'names.txt',
@@ -66,24 +66,33 @@ const createLocalDirDataset = (dirpath) => Promise.resolve(new Dataset(dirpath))
 const createTargzDataset = (tarGzStream) => new Promise((resolve, reject) => {
   const tempPath = fs.mkdtempSync(path.join(os.tmpdir(), 'gwtegakibackend-'));
   console.debug('dataset extract start to:', tempPath);
-  const tarWStream = tar.extract({
+  const tarProcess = child_process.spawn('tar', [
+    "xzvf",
+    "-",
+    ...DATASET_FILES,
+  ], {
     cwd: tempPath,
-    strict: true,
-  }, DATASET_FILES);
-  tarGzStream.on('error', (err) => {
-    tarWStream.end();
+    stdio: ['pipe', 'inherit', 'inherit'],
+  });
+  tarGzStream.once('error', (err) => {
+    tarProcess.kill();
     reject(err);
   });
-  tarWStream.on('error', (err) => {
+  tarProcess.on('error', (err) => {
     reject(err);
-  })
-  tarGzStream.pipe(tarWStream).once('finish', () => {
+  });
+  tarProcess.once('exit', (code, signal) => {
+    if (code !== 0) {
+      reject(new Error(`tar command exited with code ${code}, signal ${signal}`));
+      return;
+    }
     console.debug('dataset extract complete');
     const dataset = new Dataset(tempPath, () => {
       fs.rmSync(tempPath, { recursive: true });
     });
     resolve(dataset);
   });
+  tarGzStream.pipe(tarProcess.stdin);
 });
 
 /** @return {Promise<Dataset>} */

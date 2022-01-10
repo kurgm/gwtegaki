@@ -9,8 +9,7 @@
   "license": "MIT",
   "dependencies": {
     "@google-cloud/storage": "^5.16.1",
-    "annoy": "^3.0.3",
-    "tar": "^6.1.11"
+    "annoy": "^3.0.3"
   },
   "devDependencies": {
     "@google-cloud/functions-framework": "^2.1.0"
