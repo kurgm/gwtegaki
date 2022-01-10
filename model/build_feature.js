@@ -7,9 +7,10 @@ const readline = require('readline');
 
 const ProgressBar = require('progress');
 
-const { _: [dumpfilepath, namesfilepath, featurefilepath] } = require('yargs')
-  .check((argv) => argv._.length === 3)
-  .argv;
+const { dumpfilepath, namesfilepath, featurefilepath } = require('yargs')
+  .command("* <dumpfilepath> <namesfilepath> <featurefilepath>", "Build feature index and name list file from dump")
+  .string(["dumpfilepath", "namesfilepath", "featurefilepath"])
+  .parseSync();
 
 const { strokes_to_feature_array, FEATURE_COLSIZE } = require('./feature');
 
