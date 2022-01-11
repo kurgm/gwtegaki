@@ -1,6 +1,6 @@
 // @ts-check
 
-const modelVersion = "1";
+const modelVersion = "2";
 
 /**
  * @template T
@@ -20,6 +20,16 @@ function maxBy(arr, valfun) {
     }
   }
   return maxElem;
+}
+
+/**
+ * 
+ * @param {number} v 
+ * @param {number} min 
+ * @param {number} max 
+ */
+function clamp(v, min, max) {
+  return v < min ? min : v > max ? max : v;
 }
 
 /** @typedef {[number, number]} Point */
@@ -56,128 +66,122 @@ function pick_points(stroke) {
 }
 
 /**
- * @typedef {object} PointFeature
- * @property {number} x
- * @property {number} y
- * @property {number} mag
- * @property {number} deg
+ * @param {number[]} size
+ * @return {any[]}
  */
-/**
- * @typedef {object} SegmentFeature
- * @property {number} mag
- * @property {number} deg
- */
-/**
- * @typedef {object} StrokeFeature
- * @property {PointFeature[]} points
- * @property {SegmentFeature[]} segments
- */
-/**
- * @typedef {StrokeFeature[]} RawFeature
- */
-
-/**
- * @param {Point} point
- * @returns {PointFeature}
- */
-function point_to_feature([x, y]) {
-  const dx = x - 100;
-  const dy = y - 100;
-  const mag = Math.hypot(dx, dy);
-  const deg = Math.atan2(dy, dx);
-  return { x, y, mag, deg };
+function create_md_array(size) {
+  if (size.length === 1) {
+    return Array(size[0]).fill(0);
+  }
+  const subsize = size.slice(1);
+  return Array.from({ length: size[0] }, () => create_md_array(subsize));
 }
 
 /**
- * @param {Point} point1
- * @param {Point} point2
- * @returns {SegmentFeature}
+ * @param {any[]} arr
+ * @param {number[]} indices
+ * @param {number} value 
+ * @return {void}
  */
-function segment_feature([p1x, p1y], [p2x, p2y]) {
-  const dx = p2x - p1x;
-  const dy = p2y - p1y;
-  const mag = Math.hypot(dx, dy);
-  const deg = Math.atan2(dx, dy);  // upward segment has deg = pi or -pi
-  return { mag, deg };
+function add_md_array_fracidx(arr, indices, value) {
+  const fracindex0 = clamp(indices[0], 0, arr.length - 1);
+  const intindex = fracindex0 | 0;
+  const frac = fracindex0 - intindex;
+  /** @type {[number, number][]} */
+  const index0s = [
+    [intindex, 1 - frac],
+    [intindex + 1, frac],
+  ];
+  const subindices = indices.slice(1);
+  for (const [index0, k] of index0s) {
+    if (index0 < 0 || index0 >= arr.length || k == 0) {
+      continue;
+    }
+    if (subindices.length === 0) {
+      arr[index0] += k * value;
+    } else {
+      add_md_array_fracidx(arr[index0], subindices, k * value);
+    }
+  }
 }
 
-/** 
+const PARAM_N_PT_X = 4;
+const PARAM_N_PT_Y = 4;
+const PARAM_N_SEG_X = 2;
+const PARAM_N_SEG_Y = 2;
+const PARAM_N_SEG_MAG = 6;
+const PARAM_N_SEG_ANGLE = 7;
+
+/** @typedef {number[][][][]} AbsoluteFeature */
+/** @typedef {number[][][][]} RelativeFeature */
+/**
+ * @typedef RawFeature
+ * @property {AbsoluteFeature} abs
+ * @property {RelativeFeature} rel
+ */
+
+/** @return {RawFeature} */
+function create_new_raw_feature() {
+  return {
+    abs: create_md_array([PARAM_N_PT_X, PARAM_N_PT_Y, PARAM_N_PT_X, PARAM_N_PT_Y]),
+    rel: create_md_array([PARAM_N_SEG_X, PARAM_N_SEG_Y, PARAM_N_SEG_MAG, PARAM_N_SEG_ANGLE]),
+  };
+}
+
+/**
+ * @param {RawFeature} feature
+ * @param {Point} p
+ * @param {Point} q
+ * @param {number} k
+ * @return {void}
+ */
+function add_feature_segment(feature, [px, py], [qx, qy], k) {
+  const pxIdx = px / 200 * (PARAM_N_PT_X - 1);
+  const pyIdx = py / 200 * (PARAM_N_PT_Y - 1);
+  const qxIdx = qx / 200 * (PARAM_N_PT_X - 1);
+  const qyIdx = qy / 200 * (PARAM_N_PT_Y - 1);
+
+  add_md_array_fracidx(feature.abs, [pxIdx, pyIdx, qxIdx, qyIdx], k);
+
+  const dx = qx - px;
+  const dy = qy - py;
+  const mag = Math.hypot(dx, dy);
+  const angle = Math.atan2(dx, dy);  // upward segments have angle = pi or -pi
+
+  const mxIdx = (px + qx) / 400 * (PARAM_N_SEG_X - 1);
+  const myIdx = (py + qy) / 400 * (PARAM_N_SEG_Y - 1);
+  const magIdx = mag / 250 * (PARAM_N_SEG_MAG - 1);
+  const angleIdx = (angle / Math.PI + 0.5) / 1.5 * (PARAM_N_SEG_ANGLE - 1);
+
+  const k2 = k * (0.5 + mag / 400) * 1.3;
+  add_md_array_fracidx(feature.rel, [mxIdx, myIdx, magIdx, angleIdx], k2);
+}
+
+/**
  * @param {Stroke[]} strokes
  * @returns {RawFeature}
  */
 function get_raw_feature_of_strokes(strokes) {
-  /** @type {RawFeature} */
-  const feature = [];
+  const feature = create_new_raw_feature();
   for (const stroke of strokes) {
     const points = pick_points(stroke)
 
-    const pointf = points.map(point_to_feature);
-    const segmentf = [
-      segment_feature(points[0], points[2]),
-      segment_feature(points[0], points[1]),
-      segment_feature(points[1], points[2]),
-    ];
-    feature.push({ points: pointf, segments: segmentf });
+    add_feature_segment(feature, points[0], points[2], 1);
+    add_feature_segment(feature, points[0], points[1], 0.4);
+    add_feature_segment(feature, points[1], points[2], 0.4);
   }
   return feature;
 }
 
-const _segment_feature_size = 2;
-const _point_feature_size = 4;
-const _stroke_feature_size = _point_feature_size * 3 + _segment_feature_size * 3;
-const _max_stroke_num = 50;
-const FEATURE_COLSIZE = _stroke_feature_size * _max_stroke_num;
+const _abs_feature_size = PARAM_N_PT_X * PARAM_N_PT_Y * PARAM_N_PT_X * PARAM_N_PT_Y;
+const _rel_feature_size = PARAM_N_SEG_X * PARAM_N_SEG_Y * PARAM_N_SEG_MAG * PARAM_N_SEG_ANGLE;
+const FEATURE_COLSIZE = _abs_feature_size + _rel_feature_size;
 
 /**
  * @param {RawFeature} feature 
  */
 function raw_feature_to_array(feature) {
-
-  /**
-   * 
-   * @param {SegmentFeature} sf
-   * @param {number} k
-   */
-  function segment_feature_values(sf, k = 1.0) {
-    return [
-      k * sf.mag / 200,
-      k * sf.deg / Math.PI,
-    ];
-  }
-
-  /**
-   * 
-   * @param {PointFeature} pf
-   * @param {number} k
-   */
-  function point_feature_values(pf, k = 1.0) {
-    return [
-      k * pf.x / 200,
-      k * pf.y / 200,
-      k * pf.mag / 200,
-      k * pf.deg / (2 * Math.PI),
-    ];
-  }
-  /** @type {number[]} */
-  const values = Array(FEATURE_COLSIZE).fill(0);
-
-  const numStroke = Math.min(feature.length, _max_stroke_num);
-  for (let i = 0; i < numStroke; i++) {
-    const stroke = feature[i];
-    const strokeval = [
-      ...point_feature_values(stroke.points[0]),
-      ...point_feature_values(stroke.points[1], 0.3),
-      ...point_feature_values(stroke.points[2]),
-      ...segment_feature_values(stroke.segments[0]),
-      ...segment_feature_values(stroke.segments[1], 0.4),
-      ...segment_feature_values(stroke.segments[2], 0.4),
-    ];
-    for (let j = 0; j < strokeval.length; j++) {
-      values[i * _stroke_feature_size + j] = strokeval[j];
-    }
-  }
-
-  return values;
+  return feature.abs.flat(3).concat(feature.rel.flat(3));
 }
 
 /** @param {Stroke[]} strokes */
