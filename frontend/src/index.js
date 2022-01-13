@@ -1,4 +1,4 @@
-import { strokes_to_feature_array } from 'gwtegaki-model/feature';
+import { strokes_to_feature_array, modelVersion } from 'gwtegaki-model/feature';
 
 document.addEventListener('DOMContentLoaded', () => {
   const canvas = /** @type {HTMLCanvasElement} */(document.getElementById('area'));
@@ -164,7 +164,10 @@ document.addEventListener('DOMContentLoaded', () => {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: `v=1&query=${query}`,
+      body: new URLSearchParams({
+        v: modelVersion,
+        query,
+      }),
     });
     if (!response.ok) {
       const text = await response.text().catch((err) => String(err));
@@ -183,7 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     strokes = strokes.concat([stroke]);
     const theStrokes = strokes;
-    const feature = strokes_to_feature_array(strokes);
+    const feature = strokes_to_feature_array(strokes).map((x) => +x.toPrecision(7));
     let queryLength = feature.length;
     for (; queryLength > 1; queryLength--) {
       if (feature[queryLength - 1] !== 0) {
