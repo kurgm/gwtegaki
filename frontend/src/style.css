@@ -12,7 +12,8 @@
 
 #area {
   border: 1px solid #cccccc;
-  background-color: #fdebb9;
+  background-color: #fdf1ce;
+  background-image: url(./area.svg)
 }
 
 #result {
