@@ -306,7 +306,7 @@ function isTargetGlyph(name) {
   return true;
 }
 
-const modelMetric = 'Manhattan';
+const modelMetric = 'Euclidean';
 const annoyIndex = new Annoy(FEATURE_COLSIZE, modelMetric);
 
 const namesStream = fs.createWriteStream(namesfilepath);
