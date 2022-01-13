@@ -1,6 +1,6 @@
 // @ts-check
 
-const modelVersion = "2";
+const modelVersion = '2';
 
 /**
  * @template T

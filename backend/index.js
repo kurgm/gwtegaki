@@ -39,7 +39,7 @@ const loadDataset = () => {
      * @return {Promise<DatasetMeta>}
      */
     const loadMetadata = async (path) => {
-      return JSON.parse(await fs.promises.readFile(path, "utf-8"));
+      return JSON.parse(await fs.promises.readFile(path, 'utf-8'));
     };
     /**
      * @param {string} path

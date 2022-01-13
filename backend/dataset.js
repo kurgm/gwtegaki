@@ -68,8 +68,8 @@ const createTargzDataset = (tarGzStream) => new Promise((resolve, reject) => {
   const tempPath = fs.mkdtempSync(path.join(os.tmpdir(), 'gwtegakibackend-'));
   console.debug('dataset extract start to:', tempPath);
   const tarProcess = child_process.spawn('tar', [
-    "xzvf",
-    "-",
+    'xzvf',
+    '-',
     ...DATASET_FILES,
   ], {
     cwd: tempPath,

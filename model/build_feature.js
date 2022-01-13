@@ -9,8 +9,8 @@ const Annoy = require('annoy');
 const ProgressBar = require('progress');
 
 const { dumpfilepath, namesfilepath, featurefilepath, metadatafilepath } = require('yargs')
-  .command("* <dumpfilepath> <namesfilepath> <featurefilepath> <metadatafilepath>", "Build feature index and name list file from dump")
-  .string(["dumpfilepath", "namesfilepath", "featurefilepath", "metadatafilepath"])
+  .command('* <dumpfilepath> <namesfilepath> <featurefilepath> <metadatafilepath>', 'Build feature index and name list file from dump')
+  .string(['dumpfilepath', 'namesfilepath', 'featurefilepath', 'metadatafilepath'])
   .parseSync();
 
 const { strokes_to_feature_array, FEATURE_COLSIZE, modelVersion } = require('./feature');
@@ -334,7 +334,7 @@ async function finishOutput() {
   });
   annoyIndex.build(10);
   annoyIndex.save(featurefilepath);
-  fs.writeFileSync(metadatafilepath, JSON.stringify(getMetadata()), { encoding: "utf-8" });
+  fs.writeFileSync(metadatafilepath, JSON.stringify(getMetadata()), { encoding: 'utf-8' });
 }
 
 
