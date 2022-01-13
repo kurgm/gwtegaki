@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /** @type {Promise<Result[]>[]} */
   let searchResultPromises = [];
   function commitStroke() {
-    if (!stroke) {
+    if (!stroke || stroke.length < 2) {
       return;
     }
     strokes = strokes.concat([stroke]);
