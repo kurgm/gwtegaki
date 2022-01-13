@@ -263,7 +263,7 @@ function isAlias(data) {
   return !data.includes('$') && data.startsWith('99:0:0:0:0:200:200:');
 }
 
-const kanjiRanges = [
+const kanjiRangesUCS = [
   [0x3400, 0x4dbf],
   [0x4e00, 0x9fff],
   [0x20000, 0x2a6df],
@@ -277,16 +277,36 @@ const kanjiRanges = [
   [0x2f800, 0x2fa1d],
 ];
 
+const kanjiRangesAJ1 = [
+  [656, 656],
+  [1125, 7477],
+  [7633, 7886],
+  [7961, 8004],
+  [8266, 8267],
+  [8284, 8285],
+  [8359, 8717],
+  [13320, 15443],
+  [16779, 20316],
+  [21071, 23057],
+];
+
 /** @param {string} name */
 function isKanjiGlyph(name) {
   {
-    const m = /^u([0-9a-f]{4,})(?:-|$)/.exec(name)
+    const m = /^u([0-9a-f]{4,})(?:-|$)/.exec(name);
     if (m) {
       const cp = parseInt(m[1], 16);
       if (0x2FF0 <= cp && cp <= 0x2FFB) {
         return true;
       }
-      return kanjiRanges.some(([stt, end]) => stt <= cp && cp <= end);
+      return kanjiRangesUCS.some(([stt, end]) => stt <= cp && cp <= end);
+    }
+  }
+  {
+    const m = /^aj1-(\d{5})(?:-|$)/.exec(name);
+    if (m) {
+      const cid = parseInt(m[1]);
+      return kanjiRangesAJ1.some(([stt, end]) => stt <= cid && cid <= end);
     }
   }
   return true;
