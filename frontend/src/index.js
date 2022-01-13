@@ -164,7 +164,10 @@ document.addEventListener('DOMContentLoaded', () => {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: `v=${modelVersion}&query=${query}`,
+      body: new URLSearchParams({
+        v: modelVersion,
+        query,
+      }),
     });
     if (!response.ok) {
       const text = await response.text().catch((err) => String(err));
