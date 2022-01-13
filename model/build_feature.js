@@ -244,7 +244,7 @@ function getStrokes(glyphMap, data) {
           const trans_ = trans;
           trans = ([x, y]) => trans_([
             stretch(sx - 200, tx, x, minx, maxx),
-            stretch(sy - 200, ty, y, miny, maxy),
+            stretch(sy, ty, y, miny, maxy),
           ]);
         }
 
