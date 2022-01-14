@@ -9,7 +9,8 @@
   "license": "MIT",
   "dependencies": {
     "@google-cloud/storage": "^5.16.1",
-    "annoy": "^3.0.3"
+    "annoy": "^3.0.3",
+    "fast-crc32c": "^2.0.0"
   },
   "devDependencies": {
     "@google-cloud/functions-framework": "^2.1.0"
