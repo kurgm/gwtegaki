@@ -1,22 +1,23 @@
 NODE = node
 
 # ordered to be used as arguments for build_feature.js
-dataset_files = names.txt features.ann metadata.json
+dataset_filenames = names.txt features.ann metadata.json
 
-all: dataset.tar.gz
+dataset_files = $(addprefix dataset/,$(dataset_filenames))
 
-dataset.tar.gz: $(dataset_files)
-	tar czvf $@ $^
+all: $(dataset_files)
 
-$(dataset_files): dump_newest_only.txt
+$(dataset_files): dump_newest_only.txt | dataset
 	$(NODE) build_feature.js $< $(dataset_files)
+
+dataset:
+	mkdir -p $@
 
 dump_newest_only.txt:
 	wget -q -O - https://glyphwiki.org/dump.tar.gz | tar xvzf - $@
 
 clean:
 	-rm dump_newest_only.txt
-	-rm $(dataset_files)
-	-rm dataset.tar.gz
+	-rm -r dataset
 
 .PHONY: all clean

@@ -1,7 +1,6 @@
 // @ts-check
 
 const os = require('os');
-const child_process = require('child_process')
 const fs = require('fs');
 const path = require('path');
 
@@ -61,40 +60,32 @@ class Dataset {
 const createLocalDirDataset = (dirpath) => Promise.resolve(new Dataset(dirpath));
 
 /**
- * @param {NodeJS.ReadableStream} tarGzStream
+ * @param {string} gcsBucketName
+ * @param {string} gcsDir
  * @return {Promise<Dataset>}
  */
-const createTargzDataset = (tarGzStream) => new Promise((resolve, reject) => {
+const createGCSDirDataset = async (gcsBucketName, gcsDir) => {
   const tempPath = fs.mkdtempSync(path.join(os.tmpdir(), 'gwtegakibackend-'));
-  console.debug('dataset extract start to:', tempPath);
-  const tarProcess = child_process.spawn('tar', [
-    'xzvf',
-    '-',
-    ...DATASET_FILES,
-  ], {
-    cwd: tempPath,
-    stdio: ['pipe', 'inherit', 'inherit'],
-  });
-  tarGzStream.once('error', (err) => {
-    tarProcess.kill();
-    reject(err);
-  });
-  tarProcess.on('error', (err) => {
-    reject(err);
-  });
-  tarProcess.once('exit', (code, signal) => {
-    if (code !== 0) {
-      reject(new Error(`tar command exited with code ${code}, signal ${signal}`));
-      return;
-    }
-    console.debug('dataset extract complete');
-    const dataset = new Dataset(tempPath, () => {
-      fs.rmSync(tempPath, { recursive: true });
-    });
-    resolve(dataset);
-  });
-  tarGzStream.pipe(tarProcess.stdin);
-});
+  const cleanupTempDir = () => {
+    fs.rmSync(tempPath, { recursive: true });
+  };
+  try {
+    const cloudStorage = new Storage();
+    const bucket = cloudStorage.bucket(gcsBucketName);
+
+    console.log('start downloading dataset to:', tempPath);
+    await Promise.all(DATASET_FILES.map((filepath) => (
+      bucket.file(path.join(gcsDir, filepath)).download({
+        destination: path.join(tempPath, filepath),
+      })
+    )));
+    console.log('complete downloading dataset to:', tempPath);
+  } catch (e) {
+    cleanupTempDir();
+    throw e;
+  }
+  return new Dataset(tempPath, cleanupTempDir);
+};
 
 /** @return {Promise<Dataset>} */
 exports.getDataset = () => {
@@ -104,20 +95,11 @@ exports.getDataset = () => {
     return createLocalDirDataset(localPath);
   }
 
-  const localTargzPath = process.env.HWR_INDEX_TARGZ_PATH;
-  if (localTargzPath) {
-    console.debug('using local tar.gz dataset:', localTargzPath);
-    const stream = fs.createReadStream(localTargzPath);
-    return createTargzDataset(stream);
-  }
-
-  const bucketName = process.env.INDEX_BUCKET_NAME;
-  const blobName = process.env.INDEX_BLOB_NAME;
-  if (bucketName && blobName) {
-    console.debug('using GCS tar.gz dataset:', `gs://${bucketName}/${blobName}`);
-    const cloudStorage = new Storage();
-    const stream = cloudStorage.bucket(bucketName).file(blobName).createReadStream();
-    return createTargzDataset(stream);
+  const gcsBucketName = process.env.INDEX_GCS_BUCKET_NAME;
+  const gcsDir = process.env.INDEX_GCS_DIR;
+  if (gcsBucketName && gcsDir) {
+    console.debug('using GCS directory dataset:', `gs://${gcsBucketName}/${gcsDir}`);
+    return createGCSDirDataset(gcsBucketName, gcsDir);
   }
 
   throw new Error('no dataset available');
