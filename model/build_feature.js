@@ -9,8 +9,27 @@ const Annoy = require('annoy');
 const ProgressBar = require('progress');
 
 const { dumpfilepath, namesfilepath, featurefilepath, metadatafilepath } = require('yargs')
-  .command('* <dumpfilepath> <namesfilepath> <featurefilepath> <metadatafilepath>', 'Build feature index and name list file from dump')
-  .string(['dumpfilepath', 'namesfilepath', 'featurefilepath', 'metadatafilepath'])
+  .command(
+    '* <dumpfilepath> <namesfilepath> <featurefilepath> <metadatafilepath>',
+    'Build feature index and name list file from dump',
+    (yargs) => yargs
+      .positional('dumpfilepath', {
+        type: 'string',
+        demandOption: true,
+      })
+      .positional('namesfilepath', {
+        type: 'string',
+        demandOption: true,
+      })
+      .positional('featurefilepath', {
+        type: 'string',
+        demandOption: true,
+      })
+      .positional('metadatafilepath', {
+        type: 'string',
+        demandOption: true,
+      })
+  )
   .parseSync();
 
 const { strokes_to_feature_array, FEATURE_COLSIZE, modelVersion } = require('./feature');
