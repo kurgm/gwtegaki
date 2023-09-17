@@ -290,6 +290,7 @@ const kanjiRangesUCS = [
   [0x2b740, 0x2b81f],
   [0x2b820, 0x2ceaf],
   [0x2ceb0, 0x2ebef],
+  [0x2ebf0, 0x2ee5f],
   [0x30000, 0x3134f],
   [0x31350, 0x323af],
   [0xf900, 0xfa6d],
@@ -319,7 +320,7 @@ function isKanjiGlyph(name) {
     const m = /^u([0-9a-f]{4,})(?:-|$)/.exec(name);
     if (m) {
       const cp = parseInt(m[1], 16);
-      if (0x2FF0 <= cp && cp <= 0x2FFB && name.length > 5) {
+      if ((0x2FF0 <= cp && cp <= 0x2FFF || cp === 0x31EF) && name.length > 5) {
         return true;
       }
       return kanjiRangesUCS.some(([stt, end]) => stt <= cp && cp <= end);
