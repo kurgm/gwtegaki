@@ -8,11 +8,9 @@
   "author": "Kurogoma",
   "license": "MIT",
   "dependencies": {
+    "@google-cloud/functions-framework": "^3.1.2",
     "@google-cloud/storage": "^6.7.0",
     "annoy": "^3.0.3",
     "fast-crc32c": "^2.0.0"
-  },
-  "devDependencies": {
-    "@google-cloud/functions-framework": "^3.1.2"
   }
 }
