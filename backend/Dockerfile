@@ -1,6 +1,6 @@
 FROM node:16-bullseye-slim AS build
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
   python3 \
   make \
   g++ \
@@ -10,7 +10,8 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 COPY package.json package*.json ./
-RUN npm install --only=production
+RUN npm install --omit=dev \
+  && npm cache clean --force
 
 FROM gcr.io/distroless/nodejs16-debian11 AS release
 
