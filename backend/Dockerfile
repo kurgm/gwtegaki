@@ -1,4 +1,4 @@
-FROM node:16-slim AS build
+FROM node:16-bullseye-slim AS build
 
 RUN apt-get update && apt-get install -y \
   python3 \
@@ -12,7 +12,7 @@ WORKDIR /app
 COPY package.json package*.json ./
 RUN npm install --only=production
 
-FROM gcr.io/distroless/nodejs16 AS release
+FROM gcr.io/distroless/nodejs16-debian11 AS release
 
 WORKDIR /app
 COPY . ./
