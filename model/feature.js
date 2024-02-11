@@ -183,7 +183,7 @@ function strokes_to_feature_array(strokes) {
   return raw_feature_to_array(get_raw_feature_of_strokes(strokes));
 }
 
-module.exports = {
+export {
   get_raw_feature_of_strokes,
   raw_feature_to_array,
   strokes_to_feature_array,

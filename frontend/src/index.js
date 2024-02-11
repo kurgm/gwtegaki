@@ -1,4 +1,4 @@
-import { strokes_to_feature_array, modelVersion } from 'gwtegaki-model/feature';
+import { strokes_to_feature_array, modelVersion } from 'gwtegaki-model/feature.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const canvas = /** @type {HTMLCanvasElement} */(document.getElementById('area'));

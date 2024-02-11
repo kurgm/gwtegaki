@@ -2,13 +2,17 @@
 
 // @ts-check
 
-const fs = require('fs');
-const readline = require('readline');
+import { createReadStream, createWriteStream, writeFileSync, statSync } from 'fs';
+import { createInterface } from 'readline';
 
-const Annoy = require('annoy');
-const ProgressBar = require('progress');
+import Annoy from 'annoy';
+import ProgressBar from 'progress';
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers'
 
-const { dumpfilepath, namesfilepath, featurefilepath, metadatafilepath } = require('yargs')
+import { strokes_to_feature_array, FEATURE_COLSIZE, modelVersion } from './feature.js';
+
+const { dumpfilepath, namesfilepath, featurefilepath, metadatafilepath } = yargs(hideBin(process.argv))
   .command(
     '* <dumpfilepath> <namesfilepath> <featurefilepath> <metadatafilepath>',
     'Build feature index and name list file from dump',
@@ -32,13 +36,11 @@ const { dumpfilepath, namesfilepath, featurefilepath, metadatafilepath } = requi
   )
   .parseSync();
 
-const { strokes_to_feature_array, FEATURE_COLSIZE, modelVersion } = require('./feature');
-
 /** @param {string} path */
 async function* readDump(path) {
-  const inputStream = fs.createReadStream(path);
+  const inputStream = createReadStream(path);
 
-  const inputRL = readline.createInterface({
+  const inputRL = createInterface({
     input: inputStream,
     crlfDelay: Infinity,
   });
@@ -356,7 +358,7 @@ function isTargetGlyph(name) {
 const modelMetric = 'Euclidean';
 const annoyIndex = new Annoy(FEATURE_COLSIZE, modelMetric);
 
-const namesStream = fs.createWriteStream(namesfilepath);
+const namesStream = createWriteStream(namesfilepath);
 namesStream.on('error', (err) => {
   console.error(err);
   process.exit(1);
@@ -381,13 +383,13 @@ async function finishOutput() {
   });
   annoyIndex.build(10);
   annoyIndex.save(featurefilepath);
-  fs.writeFileSync(metadatafilepath, JSON.stringify(getMetadata()), { encoding: 'utf-8' });
+  writeFileSync(metadatafilepath, JSON.stringify(getMetadata()), { encoding: 'utf-8' });
 }
 
 
 function getMetadata() {
   return {
-    dumpTime: fs.statSync(dumpfilepath).mtimeMs,
+    dumpTime: statSync(dumpfilepath).mtimeMs,
     numItems: outputLineCount,
     v: modelVersion,
     dimen: FEATURE_COLSIZE,
