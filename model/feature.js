@@ -1,6 +1,6 @@
 // @ts-check
 
-import { model_version } from './pkg/gwtegaki_model.js';
+import { model_version, feature_colsize } from './pkg/gwtegaki_model.js';
 
 const modelVersion = model_version();
 
@@ -135,9 +135,7 @@ const PARAM_N_SEG_Y = 3;
 const PARAM_N_SEG_MAG = 6;
 const PARAM_N_SEG_ANGLE = 7;
 
-const _abs_feature_size = PARAM_N_PT_X * PARAM_N_PT_Y * PARAM_N_PT_X * PARAM_N_PT_Y;
-const _rel_feature_size = PARAM_N_SEG_X * PARAM_N_SEG_Y * PARAM_N_SEG_MAG * PARAM_N_SEG_ANGLE;
-const FEATURE_COLSIZE = _abs_feature_size + _rel_feature_size;
+const FEATURE_COLSIZE = feature_colsize();
 
 /**
  * @param {number[]} size
