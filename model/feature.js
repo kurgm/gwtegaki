@@ -1,6 +1,8 @@
 // @ts-check
 
-const modelVersion = '2';
+import { model_version } from './pkg/gwtegaki_model.js';
+
+const modelVersion = model_version();
 
 /**
  * @template T
