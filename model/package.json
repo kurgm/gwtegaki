@@ -4,6 +4,7 @@
   "type": "module",
   "version": "0.1.0",
   "scripts": {
+    "prebuild": "wasm-pack build --no-pack",
     "build": "make"
   },
   "author": "Kurogoma",
@@ -12,5 +13,8 @@
     "annoy": "^3.0.3",
     "progress": "^2.0.3",
     "yargs": "^17.3.1"
+  },
+  "devDependencies": {
+    "wasm-pack": "^0.12.1"
   }
 }
