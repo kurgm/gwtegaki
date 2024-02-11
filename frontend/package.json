@@ -2,10 +2,11 @@
   "name": "gwtegaki-frontend",
   "private": true,
   "version": "0.1.0",
+  "type": "module",
   "scripts": {
     "api": "HWR_INDEX_PATH=../model/dataset PORT=5000 npm start --prefix ../backend",
-    "dev": "parcel src/index.html",
-    "build": "parcel build src/index.html --public-url .",
+    "dev": "vite",
+    "build": "vite build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "deploy": "rm -rf dist && npm run build && gh-pages -d dist"
   },
@@ -17,7 +18,7 @@
   ],
   "devDependencies": {
     "gh-pages": "^4.0.0",
-    "parcel": "^2.0.1"
+    "vite": "^5.1.1"
   },
   "dependencies": {
     "gwtegaki-model": "file:../model"
