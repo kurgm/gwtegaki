@@ -1,3 +1,4 @@
+export NODE_OPTIONS = --experimental-wasm-modules
 NODE = node
 
 # ordered to be used as arguments for build_feature.js
