@@ -11,3 +11,7 @@ resolver = "2"
 # Tell `rustc` to optimize for small code size.
 opt-level = "s"
 lto = true
+
+[profile.release-nonwasm]
+inherits = "release"
+opt-level = 3

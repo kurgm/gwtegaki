@@ -6,8 +6,8 @@ ifdef RS_DEBUG
 	CARGO_BUILD_FLAGS =
 	RS_TARGET_DIR = ../target/debug
 else
-	CARGO_BUILD_FLAGS = --release
-	RS_TARGET_DIR = ../target/release
+	CARGO_BUILD_FLAGS = --profile release-nonwasm
+	RS_TARGET_DIR = ../target/release-nonwasm
 endif
 
 RS_EXE = $(RS_TARGET_DIR)/gwtegaki-build_index
