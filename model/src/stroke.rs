@@ -1,11 +1,11 @@
 #[derive(Debug, Clone)]
 pub struct Point {
-    pub x: i32,
-    pub y: i32,
+    pub x: f64,
+    pub y: f64,
 }
 
-impl From<(i32, i32)> for Point {
-    fn from((x, y): (i32, i32)) -> Self {
+impl From<(f64, f64)> for Point {
+    fn from((x, y): (f64, f64)) -> Self {
         Self { x, y }
     }
 }
@@ -24,10 +24,10 @@ impl Stroke {
             let c = start.x * end.y - start.y * end.x;
             let z = a * a + b * b;
             move |p: &Point| {
-                if z == 0 {
+                if z == 0.0 {
                     let dx = p.x - start.x;
                     let dy = p.y - start.y;
-                    ((dx * dx + dy * dy) as f64).sqrt() as i32
+                    dx.hypot(dy)
                 } else {
                     (a * p.x + b * p.y + c).abs() / z
                 }
@@ -38,15 +38,15 @@ impl Stroke {
             .0
             .iter()
             .map(|p| (p, distance_from_line(p)))
-            .max_by_key(|(_, d)| *d)
+            .max_by(|(_, d1), (_, d2)| d1.partial_cmp(d2).unwrap())
             .unwrap();
 
-        let mid = if mid_distance > 7 {
+        let mid = if mid_distance > 7.0 {
             mid.clone()
         } else {
             Point {
-                x: (start.x + end.x) / 2,
-                y: (start.y + end.y) / 2,
+                x: (start.x + end.x) / 2.0,
+                y: (start.y + end.y) / 2.0,
             }
         };
 

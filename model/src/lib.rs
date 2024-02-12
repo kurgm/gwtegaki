@@ -30,8 +30,8 @@ pub fn strokes_flattened_to_feature_array(strokes_flattened: &[i32]) -> Box<[f64
         let mut points = Vec::new();
         for j in 0..n_points {
             points.push(Point {
-                x: strokes_flattened[i + 1 + 2 * j],
-                y: strokes_flattened[i + 1 + 2 * j + 1],
+                x: strokes_flattened[i + 1 + 2 * j] as f64,
+                y: strokes_flattened[i + 1 + 2 * j + 1] as f64,
             });
         }
         strokes.push(Stroke(points));

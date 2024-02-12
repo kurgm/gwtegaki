@@ -20,12 +20,7 @@ impl IndexedFeatureDim<ABS_FEATURE_DIM> for AbsFeatureDim {
 type AbsFeatureElement = IndexedFeatureElement<ABS_FEATURE_DIM>;
 
 fn calc_abs_index((p, q): (&Point, &Point), k: f64) -> AbsFeatureElement {
-    let index = [
-        p.x as f64 / 200.0,
-        p.y as f64 / 200.0,
-        q.x as f64 / 200.0,
-        q.y as f64 / 200.0,
-    ];
+    let index = [p.x / 200.0, p.y / 200.0, q.x / 200.0, q.y / 200.0];
     let value = k;
     AbsFeatureElement { index, value }
 }
@@ -45,12 +40,12 @@ type RelFeatureElement = IndexedFeatureElement<REL_FEATURE_DIM>;
 fn calc_rel_index((p, q): (&Point, &Point), k: f64) -> RelFeatureElement {
     let dx = q.x - p.x;
     let dy = q.y - p.y;
-    let mag = ((dx * dx + dy * dy) as f64).sqrt();
-    let angle = (dx as f64).atan2(dy as f64); // upward segments have angle = pi or -pi
+    let mag = dx.hypot(dy);
+    let angle = dx.atan2(dy); // upward segments have angle = pi or -pi
 
     let index = [
-        (p.x + q.x) as f64 / 400.0,
-        (p.y + q.y) as f64 / 400.0,
+        (p.x + q.x) / 400.0,
+        (p.y + q.y) / 400.0,
         mag / 250.0,
         (angle / std::f64::consts::PI + 0.5) / 1.5,
     ];

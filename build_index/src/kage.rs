@@ -28,14 +28,19 @@ impl BuhinRecurser {
     }
 
     fn kage_line_to_strokes(&mut self, line: &str, dump: &Dump) -> Vec<Stroke> {
-        let numeric_data: Vec<i32> = line
+        let numeric_data: Vec<f64> = line
             .split(':')
             .map(|s| parse_cell(s))
-            .chain(std::iter::repeat(0))
+            .chain(std::iter::repeat(0.0))
             .take(11)
             .collect();
 
-        match numeric_data[0] {
+        match line
+            .split(':')
+            .nth(0)
+            .and_then(|s| s.parse::<i32>().ok())
+            .unwrap_or(0)
+        {
             1 => vec![line_stroke(
                 (numeric_data[3], numeric_data[4]),
                 (numeric_data[5], numeric_data[6]),
@@ -95,64 +100,64 @@ impl BuhinRecurser {
     }
 }
 
-fn parse_cell(s: &str) -> i32 {
-    // parse as i32, if failed, return 0
-    s.parse::<i32>().unwrap_or(0)
+fn parse_cell(s: &str) -> f64 {
+    // parse as f64, if failed, return 0
+    s.parse::<f64>().unwrap_or(0.0)
 }
 
-fn line_stroke(start: (i32, i32), end: (i32, i32)) -> Stroke {
+fn line_stroke(start: (f64, f64), end: (f64, f64)) -> Stroke {
     Stroke(vec![start.into(), end.into()])
 }
 
-fn quadratic_bezier_stroke(start: (i32, i32), control: (i32, i32), end: (i32, i32)) -> Stroke {
+fn quadratic_bezier_stroke(start: (f64, f64), control: (f64, f64), end: (f64, f64)) -> Stroke {
     const N_SAMPLES: i32 = 4;
     let mut points: Vec<Point> = vec![start.into()];
-    let (sx, sy) = (start.0 as f64, start.1 as f64);
-    let (cx, cy) = (control.0 as f64, control.1 as f64);
-    let (ex, ey) = (end.0 as f64, end.1 as f64);
+    let (sx, sy) = start;
+    let (cx, cy) = control;
+    let (ex, ey) = end;
     for i in 1..=N_SAMPLES {
         let t = i as f64 / (N_SAMPLES + 1) as f64;
         let s = 1.0 - t;
         let x = s * s * sx + 2.0 * s * t * cx + t * t * ex;
         let y = s * s * sy + 2.0 * s * t * cy + t * t * ey;
-        points.push((x as i32, y as i32).into());
+        points.push((x, y).into());
     }
     points.push(end.into());
     Stroke(points)
 }
 
 fn cubic_bezier_stroke(
-    start: (i32, i32),
-    control1: (i32, i32),
-    control2: (i32, i32),
-    end: (i32, i32),
+    start: (f64, f64),
+    control1: (f64, f64),
+    control2: (f64, f64),
+    end: (f64, f64),
 ) -> Stroke {
     const N_SAMPLES: i32 = 4;
     let mut points: Vec<Point> = vec![start.into()];
-    let (sx, sy) = (start.0 as f64, start.1 as f64);
-    let (c1x, c1y) = (control1.0 as f64, control1.1 as f64);
-    let (c2x, c2y) = (control2.0 as f64, control2.1 as f64);
-    let (ex, ey) = (end.0 as f64, end.1 as f64);
+    let (sx, sy) = start;
+    let (c1x, c1y) = control1;
+    let (c2x, c2y) = control2;
+    let (ex, ey) = end;
     for i in 1..=N_SAMPLES {
         let t = i as f64 / (N_SAMPLES + 1) as f64;
         let s = 1.0 - t;
         let x = s * s * s * sx + 3.0 * s * s * t * c1x + 3.0 * s * t * t * c2x + t * t * t * ex;
         let y = s * s * s * sy + 3.0 * s * s * t * c1y + 3.0 * s * t * t * c2y + t * t * t * ey;
-        points.push((x as i32, y as i32).into());
+        points.push((x, y).into());
     }
     points.push(end.into());
     Stroke(points)
 }
 
-fn bend_stroke(start: (i32, i32), mid: (i32, i32), end: (i32, i32)) -> Stroke {
+fn bend_stroke(start: (f64, f64), mid: (f64, f64), end: (f64, f64)) -> Stroke {
     Stroke(vec![start.into(), mid.into(), end.into()])
 }
 
 fn slash_stroke(
-    start: (i32, i32),
-    mid: (i32, i32),
-    control: (i32, i32),
-    end: (i32, i32),
+    start: (f64, f64),
+    mid: (f64, f64),
+    control: (f64, f64),
+    end: (f64, f64),
 ) -> Stroke {
     let Stroke(points0) = line_stroke(start, mid);
     let Stroke(points1) = quadratic_bezier_stroke(mid, control, end);
@@ -164,11 +169,11 @@ fn slash_stroke(
     )
 }
 
-fn strokes_bbx(strokes: &[Stroke]) -> (i32, i32, i32, i32) {
-    let mut min_x = std::i32::MAX;
-    let mut max_x = std::i32::MIN;
-    let mut min_y = std::i32::MAX;
-    let mut max_y = std::i32::MIN;
+fn strokes_bbx(strokes: &[Stroke]) -> (f64, f64, f64, f64) {
+    let mut min_x = std::f64::MAX;
+    let mut max_x = std::f64::MIN;
+    let mut min_y = std::f64::MAX;
+    let mut max_y = std::f64::MIN;
     for stroke in strokes {
         for point in &stroke.0 {
             min_x = min_x.min(point.x);
@@ -182,22 +187,20 @@ fn strokes_bbx(strokes: &[Stroke]) -> (i32, i32, i32, i32) {
 
 fn transform_buhin_strokes(
     strokes: Vec<Stroke>,
-    point_s: (i32, i32),
-    point_0: (i32, i32),
-    point_1: (i32, i32),
-    point_t: (i32, i32),
+    point_s: (f64, f64),
+    (x0, y0): (f64, f64),
+    (x1, y1): (f64, f64),
+    point_t: (f64, f64),
 ) -> Vec<Stroke> {
-    let place_rect = {
-        let (x0, y0) = (point_0.0 as f64, point_0.1 as f64);
-        let (x1, y1) = (point_1.0 as f64, point_1.1 as f64);
-
-        move |(x, y): (f64, f64)| (x * (x1 - x0) / 200.0 + x0, y * (y1 - y0) / 200.0 + y0)
+    let place_rect = move |Point { x, y }| Point {
+        x: x * (x1 - x0) / 200.0 + x0,
+        y: y * (y1 - y0) / 200.0 + y0,
     };
 
     let stretch = {
         let (sx, sy, tx, ty) = {
-            let (sx, sy) = (point_s.0 as f64, point_s.1 as f64);
-            let (tx, ty) = (point_t.0 as f64, point_t.1 as f64);
+            let (sx, sy) = point_s;
+            let (tx, ty) = point_t;
             if sx <= 100.0 {
                 (sx + 200.0, sy, 0.0, 0.0)
             } else {
@@ -205,13 +208,11 @@ fn transform_buhin_strokes(
             }
         };
         ((sx - 200.0, sy) != (tx, ty)).then(|| {
-            let bbx = strokes_bbx(&strokes);
-            let (min_x, max_x, min_y, max_y) =
-                (bbx.0 as f64, bbx.1 as f64, bbx.2 as f64, bbx.3 as f64);
-            move |(x, y): (f64, f64)| {
+            let (min_x, max_x, min_y, max_y) = strokes_bbx(&strokes);
+            move |Point { x, y }| {
                 let x = stretch(sx - 200.0, tx, x, min_x, max_x);
                 let y = stretch(sy - 200.0, ty, y, min_y, max_y);
-                (x, y)
+                Point { x, y }
             }
         })
     };
@@ -223,15 +224,11 @@ fn transform_buhin_strokes(
                     .0
                     .into_iter()
                     .map(|point| {
-                        let mut p = (point.x as f64, point.y as f64);
+                        let mut p = point;
                         if let Some(stretch) = stretch {
                             p = stretch(p);
                         }
-                        p = place_rect(p);
-                        Point {
-                            x: p.0 as i32,
-                            y: p.1 as i32,
-                        }
+                        place_rect(p)
                     })
                     .collect(),
             )
