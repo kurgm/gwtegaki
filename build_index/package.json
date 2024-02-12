@@ -1,0 +1,17 @@
+{
+  "name": "gwtegaki-build_index",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "scripts": {
+    "build": "make"
+  },
+  "author": "Kurogoma",
+  "license": "MIT",
+  "dependencies": {
+    "annoy": "^3.0.3",
+    "gwtegaki-model": "file:../model",
+    "progress": "^2.0.3",
+    "yargs": "^17.3.1"
+  }
+}

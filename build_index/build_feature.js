@@ -10,7 +10,7 @@ import ProgressBar from 'progress';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers'
 
-import { strokes_to_feature_array, FEATURE_COLSIZE, modelVersion } from './feature.js';
+import { strokes_to_feature_array, FEATURE_COLSIZE, modelVersion } from 'gwtegaki-model';
 
 const { dumpfilepath, namesfilepath, featurefilepath, metadatafilepath } = yargs(hideBin(process.argv))
   .command(
