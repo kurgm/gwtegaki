@@ -1,0 +1,9 @@
+{
+  "name": "gwtegaki",
+  "private": true,
+  "workspaces": [
+    "model",
+    "build_index",
+    "frontend"
+  ]
+}

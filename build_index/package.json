@@ -10,7 +10,6 @@
   "license": "MIT",
   "dependencies": {
     "annoy": "^3.0.3",
-    "gwtegaki-model": "file:../model",
     "progress": "^2.0.3",
     "yargs": "^17.3.1"
   }
