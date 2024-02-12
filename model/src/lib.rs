@@ -1,6 +1,7 @@
 use wasm_bindgen::prelude::*;
 
-use crate::stroke::{Point, Stroke};
+pub use crate::model::strokes_to_feature_array;
+pub use crate::stroke::{Point, Stroke};
 
 mod indexed_feature;
 mod model;
@@ -37,5 +38,5 @@ pub fn strokes_flattened_to_feature_array(strokes_flattened: &[i32]) -> Box<[f64
         i += 1 + 2 * n_points;
     }
 
-    model::strokes_to_feature_array(&strokes).into()
+    strokes_to_feature_array(&strokes).into()
 }

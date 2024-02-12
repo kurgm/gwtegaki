@@ -4,6 +4,12 @@ pub struct Point {
     pub y: i32,
 }
 
+impl From<(i32, i32)> for Point {
+    fn from((x, y): (i32, i32)) -> Self {
+        Self { x, y }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Stroke(pub Vec<Point>);
 
