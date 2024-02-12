@@ -54,6 +54,9 @@ fn run(dumpfilepath: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
         }
         let mut recurser = BuhinRecurser::new();
         let strokes = recurser.kage_data_to_strokes(data, &dump);
+        if strokes.is_empty() {
+            continue;
+        }
         let feature = strokes_to_feature_array(&strokes);
         writer.write_feature(name, &feature)?;
     }
