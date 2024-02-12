@@ -2,6 +2,7 @@
 
 members = [
     "model",
+    "build_index",
     # "backend",
 ]
 resolver = "2"
