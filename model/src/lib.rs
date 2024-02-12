@@ -17,7 +17,7 @@ pub fn feature_colsize() -> usize {
 }
 
 #[wasm_bindgen]
-pub fn strokes_to_feature_array(strokes_flattened: &[i32]) -> Box<[f64]> {
+pub fn strokes_flattened_to_feature_array(strokes_flattened: &[i32]) -> Box<[f64]> {
     // `strokes_flattened` is a flattened array of strokes, where each stroke is a sequence of
     // (x, y) coordinates preceded by the number of points in the stroke. The first element of
     // `strokes_flattened` is the number of strokes.

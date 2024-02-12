@@ -3,7 +3,7 @@
 import {
   model_version,
   feature_colsize,
-  strokes_to_feature_array as strokes_to_feature_array_wasm,
+  strokes_flattened_to_feature_array,
 } from "./pkg/gwtegaki_model.js";
 
 const modelVersion = model_version();
@@ -27,7 +27,8 @@ function strokes_to_feature_array(strokes) {
       strokes_flattened[idx++] = y;
     }
   }
-  const feature_array_f64 = strokes_to_feature_array_wasm(strokes_flattened);
+  const feature_array_f64 =
+    strokes_flattened_to_feature_array(strokes_flattened);
   return Array.from(feature_array_f64);
 }
 
