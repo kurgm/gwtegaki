@@ -1,6 +1,6 @@
 use wasm_bindgen::prelude::*;
 
-pub use crate::model::strokes_to_feature_array;
+pub use crate::model::{strokes_to_feature_array, FEATURE_COLSIZE, MODEL_VERSION};
 pub use crate::stroke::{Point, Stroke};
 
 mod indexed_feature;
@@ -9,12 +9,12 @@ mod stroke;
 
 #[wasm_bindgen]
 pub fn model_version() -> String {
-    model::MODEL_VERSION.to_string()
+    MODEL_VERSION.to_string()
 }
 
 #[wasm_bindgen]
 pub fn feature_colsize() -> usize {
-    model::FEATURE_COLSIZE
+    FEATURE_COLSIZE
 }
 
 #[wasm_bindgen]

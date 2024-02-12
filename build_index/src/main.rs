@@ -6,7 +6,7 @@ use std::io::{self, Write};
 use std::os::unix::fs::MetadataExt;
 use std::path::PathBuf;
 
-use gwtegaki_model::{feature_colsize, model_version, strokes_to_feature_array};
+use gwtegaki_model::{strokes_to_feature_array, FEATURE_COLSIZE, MODEL_VERSION};
 use indicatif::ProgressBar;
 use itertools::Itertools;
 
@@ -38,7 +38,7 @@ fn run(dumpfilepath: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
     let mut writer = FeatureWriter::new();
     {
         let metadata = dumpfilepath.metadata()?;
-        writer.write_metadata(metadata.mtime() * 1000, &model_version(), feature_colsize())?;
+        writer.write_metadata(metadata.mtime() * 1000, MODEL_VERSION, FEATURE_COLSIZE)?;
     }
 
     let pb = ProgressBar::new(dump.len().try_into().unwrap());
