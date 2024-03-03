@@ -38,7 +38,7 @@ fn run(dumpfilepath: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
     let mut writer = FeatureWriter::new();
     {
         let metadata = dumpfilepath.metadata()?;
-        writer.write_metadata(metadata.mtime() * 1000, MODEL_VERSION, FEATURE_COLSIZE)?;
+        writer.write_metadata(metadata.mtime() * 1000, MODEL_VERSION, FEATURE_COLSIZE, dump.len())?;
     }
 
     let pb = ProgressBar::new(dump.len().try_into().unwrap());
@@ -61,6 +61,7 @@ fn run(dumpfilepath: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
         writer.write_feature(name, &feature)?;
     }
     writer.flush()?;
+    pb.finish();
 
     Ok(())
 }
@@ -80,8 +81,9 @@ impl FeatureWriter {
         timestamp: i64,
         v: &str,
         dimen: usize,
+        len_hint: usize,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        writeln!(&mut self.inner, "{} {} {}", timestamp, v, dimen)?;
+        writeln!(&mut self.inner, "{} {} {} {}", timestamp, v, dimen, len_hint)?;
         Ok(())
     }
 

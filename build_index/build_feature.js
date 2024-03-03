@@ -2,42 +2,34 @@
 
 // @ts-check
 
-import { createWriteStream, writeFileSync } from 'fs';
-import { createInterface } from 'readline';
+import { createWriteStream, writeFileSync } from "node:fs";
+import { createInterface } from "node:readline";
+import { parseArgs } from "node:util";
 
-import Annoy from 'annoy';
-import yargs from 'yargs';
-import { hideBin } from 'yargs/helpers'
+import hnswlib from "hnswlib-node";
+const { HierarchicalNSW } = hnswlib;
 
-const { namesfilepath, featurefilepath, metadatafilepath } = yargs(hideBin(process.argv))
-  .command(
-    '* <namesfilepath> <featurefilepath> <metadatafilepath>',
-    'Build feature index and name list file from dump',
-    (yargs) => yargs
-      .positional('namesfilepath', {
-        type: 'string',
-        demandOption: true,
-      })
-      .positional('featurefilepath', {
-        type: 'string',
-        demandOption: true,
-      })
-      .positional('metadatafilepath', {
-        type: 'string',
-        demandOption: true,
-      })
-  )
-  .parseSync();
+const { positionals } = parseArgs({
+  strict: true,
+  allowPositionals: true,
+});
+const [namesfilepath, featurefilepath, metadatafilepath] = positionals;
+if (!namesfilepath || !featurefilepath || !metadatafilepath) {
+  console.error(
+    `Usage: ${process.argv[1]} <namesfilepath> <featurefilepath> <metadatafilepath>`
+  );
+  process.exit(1);
+}
 
 const namesStream = createWriteStream(namesfilepath);
-namesStream.on('error', (err) => {
+namesStream.on("error", (err) => {
   console.error(err);
   process.exit(1);
 });
 
-const modelMetric = 'Euclidean';
-/** @type {Annoy} */
-let annoyIndex;
+const modelMetric = "l2";
+/** @type {import("hnswlib-node").HierarchicalNSW} */
+let hnsw;
 
 let outputLineCount = 0;
 /**
@@ -49,16 +41,18 @@ function outputFeature(name, feature) {
 
   const namesLine = `${name}\n`;
   namesStream.write(namesLine);
-  annoyIndex.addItem(outputLineNumber, feature);
+  hnsw.addPoint(feature, outputLineNumber);
 }
 
 async function finishOutput() {
   await new Promise((resolve) => {
     namesStream.end(resolve);
   });
-  annoyIndex.build(10);
-  annoyIndex.save(featurefilepath);
-  writeFileSync(metadatafilepath, JSON.stringify(getMetadata()), { encoding: 'utf-8' });
+  hnsw.resizeIndex(outputLineCount);
+  await hnsw.writeIndex(featurefilepath);
+  writeFileSync(metadatafilepath, JSON.stringify(getMetadata()), {
+    encoding: "utf-8",
+  });
 }
 
 let metadata;
@@ -76,18 +70,19 @@ const inputRL = createInterface({
 });
 for await (const line of inputRL) {
   if (!metadata) {
-    const [timestamp_str, v, dimen_str] = line.split(' ');
+    const [timestamp_str, v, dimen_str, len_hint_str] = line.split(" ");
     const dimen = +dimen_str;
     metadata = {
       dumpTime: +timestamp_str,
       v,
       dimen,
     };
-    annoyIndex = new Annoy(dimen, modelMetric);
+    hnsw = new HierarchicalNSW(modelMetric, dimen);
+    hnsw.initIndex(+len_hint_str);
     continue;
   }
-  const [name, feature_str] = line.split(' ');
-  const feature = feature_str.split(',').map((s) => +s);
+  const [name, feature_str] = line.split(" ");
+  const feature = feature_str.split(",").map((s) => +s);
   outputFeature(name, feature);
 }
 

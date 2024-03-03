@@ -9,7 +9,6 @@
   "author": "Kurogoma",
   "license": "MIT",
   "dependencies": {
-    "annoy": "^3.0.3",
-    "yargs": "^17.3.1"
+    "hnswlib-node": "^2.1.1"
   }
 }
