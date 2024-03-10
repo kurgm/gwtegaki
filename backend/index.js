@@ -4,7 +4,7 @@ const fs = require('fs');
 const events = require('events');
 const readline = require('readline');
 
-const Annoy = require('annoy');
+const { HierarchicalNSW } = require('hnswlib-node');
 
 const { getDataset } = require('./dataset');
 
@@ -14,13 +14,13 @@ const { getDataset } = require('./dataset');
  * @property {number} numItems
  * @property {string} v
  * @property {number} dimen
- * @property {string} metric
+ * @property {import('hnswlib-node').SpaceName} metric
  */
 
 /** @type {DatasetMeta} */
 let datasetMeta;
-/** @type {Annoy} */
-let annoyIndex;
+/** @type {import('hnswlib-node').HierarchicalNSW} */
+let hnsw;
 /** @type {string[]} */
 let glyphNames;
 
@@ -71,12 +71,10 @@ const loadDataset = () => {
       glyphNames = await loadGlyphNames(dataset.getEphemeralPath('names.txt'), datasetMeta.numItems);
       console.debug('load namelist complete');
 
-      console.debug('load annoy index start');
-      annoyIndex = new Annoy(datasetMeta.dimen, datasetMeta.metric);
-      if (!annoyIndex.load(dataset.getEphemeralPath('features.ann'))) {
-        throw new Error('annoyIndex.load() failed');
-      }
-      console.debug('load annoy index complete');
+      console.debug('load hnsw index start');
+      hnsw = new HierarchicalNSW(datasetMeta.metric, datasetMeta.dimen);
+      await hnsw.readIndex(dataset.getEphemeralPath('features.ann'));
+      console.debug('load hnsw index complete');
     } finally {
       dataset?.cleanup();
     }
@@ -95,13 +93,8 @@ const loadDataset = () => {
  */
 const performSearch = (query) => {
   const numNeighbors = 20;
-  const searchK = numNeighbors * 20;
   query = resizeQuery(query, datasetMeta.dimen);
-  const annoyResult = annoyIndex.getNNsByVector(query, numNeighbors, searchK, true);
-  if (!annoyResult) {
-    throw new Error('annoyIndex.getNNsByVector() failed');
-  }
-  const { neighbors, distances } = annoyResult;
+  const { neighbors, distances } = hnsw.searchKnn(query, numNeighbors);
   if (neighbors.length !== distances.length) {
     throw new Error('neighbors and distances have different length');
   }
@@ -111,7 +104,7 @@ const performSearch = (query) => {
     distance: distances[index],
   }));
   if (result.some(({ name }) => !name)) {
-    throw new Error('unexpected glyph index returned from annoy');
+    throw new Error('unexpected glyph index returned from hnsw');
   }
   return result;
 };
