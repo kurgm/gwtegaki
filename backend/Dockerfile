@@ -1,4 +1,4 @@
-FROM node:16-bullseye-slim AS build
+FROM node:20-bookworm-slim AS build
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
   python3 \
@@ -13,14 +13,14 @@ COPY package.json package*.json ./
 RUN npm install --omit=dev \
   && npm cache clean --force
 
-FROM node:16-bullseye-slim AS release
+FROM node:20-bookworm-slim AS release
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
   curl \
   ca-certificates \
   gnupg \
   tini \
-  && echo "deb https://packages.cloud.google.com/apt gcsfuse-bullseye main" | \
+  && echo "deb https://packages.cloud.google.com/apt gcsfuse-bookworm main" | \
   tee /etc/apt/sources.list.d/gcsfuse.list \
   && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | \
   apt-key add - \
