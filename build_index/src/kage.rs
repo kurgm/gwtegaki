@@ -238,9 +238,9 @@ fn transform_buhin_strokes(
 
 fn stretch(dp: f64, sp: f64, p: f64, min: f64, max: f64) -> f64 {
     let (p1, p2, p3, p4) = if p < sp + 100.0 {
-        (min, min, sp + 100.0, dp + 100.0)
+        (min, sp + 100.0, min, dp + 100.0)
     } else {
-        (sp + 100.0, dp + 100.0, max, max)
+        (sp + 100.0, max, dp + 100.0, max)
     };
     if p1 != p2 {
         ((p - p1) / (p2 - p1)) * (p4 - p3) + p3
