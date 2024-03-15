@@ -109,57 +109,42 @@ const performSearch = (query) => {
   return result;
 };
 
-/** @type {import('fastify').RouteHandlerMethod} */
-exports.warmup = async (request, reply) => {
-  try {
-    await loadDataset();
-  } catch (e) {
-    console.error(e);
-    reply.status(500).send('failed to load index');
-    return;
-  }
-  reply.status(200).send({
+exports.warmup = async () => {
+  await loadDataset();
+  return {
     dumpTime: datasetMeta.dumpTime,
     numItems: datasetMeta.numItems,
     v: datasetMeta.v,
-  });
+  };
 };
 
-/** @type {import('fastify').RouteHandlerMethod} */
-exports.hwrSearch = async (request, reply) => {
-  if (typeof request.body !== 'object' || request.body === null) {
-    reply.status(400).send('invalid request');
-    return;
+/**
+ * 
+ * @param {unknown} v 
+ * @param {number[]} query 
+ * @returns 
+ */
+exports.hwrSearch = async (v, query) => {
+  await loadDataset();
+  if (v !== datasetMeta.v) {
+    throw new InvalidVError();
   }
-  const { query: queryStr, v = '1' } =
-    /** @type {Record<string | number | symbol, unknown>} */(request.body);
-  console.debug(`query:`, queryStr);
-  const query = parseQuery(queryStr);
-  if (!query) {
-    reply.status(400).send("invalid parameter 'query'");
-    return;
-  }
-  let result;
-  try {
-    await loadDataset();
-    if (v !== datasetMeta.v) {
-      reply.status(404).send("invalid parameter 'v'");
-      return;
-    }
-    result = performSearch(query);
-  } catch (e) {
-    console.error(e);
-    reply.status(500).send('search error');
-    return;
-  }
-  reply.status(200).send(result);
+  return performSearch(query);
 };
+
+class InvalidVError extends Error {
+  constructor() {
+    super('invalid parameter \'v\'');
+  }
+}
+
+exports.InvalidVError = InvalidVError;
 
 /**
  * @param {unknown} queryStr
  * @return {number[] | null}
  */
-const parseQuery = (queryStr) => {
+exports.parseQuery = (queryStr) => {
   if (typeof queryStr !== 'string' || !queryStr) {
     return null;
   }
