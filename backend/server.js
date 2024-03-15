@@ -7,7 +7,25 @@ import cors from "@fastify/cors";
 import { hwrSearch, warmup, parseQuery, InvalidVError } from "./hwrSearch.js";
 
 const fastify = Fastify({
-  logger: true,
+  logger: {
+    level: "trace",
+    formatters: {
+      level(label) {
+        return {
+          severity:
+            {
+              trace: "DEBUG",
+              debug: "DEBUG",
+              info: "INFO",
+              warn: "WARNING",
+              error: "ERROR",
+              fatal: "CRITICAL",
+            }[label] || "DEFAULT",
+        };
+      },
+    },
+    messageKey: "message",
+  },
 });
 fastify.register(formbody);
 fastify.register(cors, {
@@ -22,7 +40,7 @@ fastify.post("/warmup", async (request, reply) => {
   try {
     return await warmup();
   } catch (e) {
-    console.error(e);
+    request.log.error(e);
     reply.status(500).send("failed to load index");
     return reply;
   }
@@ -35,7 +53,7 @@ fastify.post("/", async (request, reply) => {
   }
   const { query: queryStr, v = "1" } =
     /** @type {Record<string | number | symbol, unknown>} */ (request.body);
-  console.debug(`query:`, queryStr);
+  request.log.debug(`query: %o`, queryStr);
   const query = parseQuery(queryStr);
   if (!query) {
     reply.status(400).send("invalid parameter 'query'");
@@ -48,7 +66,7 @@ fastify.post("/", async (request, reply) => {
       reply.status(404).send(e.message);
       return reply;
     }
-    console.error(e);
+    request.log.error(e);
     reply.status(500).send("search error");
     return reply;
   }
