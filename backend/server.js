@@ -54,15 +54,12 @@ fastify.post("/", async (request, reply) => {
   }
 });
 
-fastify.listen(
-  {
+try {
+  await fastify.listen({
     host: process.env.HOSTNAME || "localhost",
     port: +(process.env.PORT || "") || 8080,
-  },
-  (err) => {
-    if (err) {
-      fastify.log.error(err);
-      process.exit(1);
-    }
-  }
-);
+  });
+} catch (err) {
+  fastify.log.error(err);
+  process.exit(1);
+}
