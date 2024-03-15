@@ -110,43 +110,43 @@ const performSearch = (query) => {
 };
 
 /**
- * @param {import('express').RequestHandler} func
- * @return {import('express').RequestHandler}
+ * @param {import('fastify').RouteHandlerMethod} func
+ * @return {import('fastify').RouteHandlerMethod}
  */
-const enableCORS = (func) => (req, res, next) => {
+const enableCORS = (func) => function (request, reply) {
   // Set CORS headers for preflight requests
   // Allows GETs from any origin with the Content-Type header
   // and caches preflight response for 3600s
 
-  res.set('Access-Control-Allow-Origin', '*');
+  reply.header('Access-Control-Allow-Origin', '*');
 
-  if (req.method === 'OPTIONS') {
+  if (request.method === 'OPTIONS') {
     // Send response to OPTIONS requests
-    res.set('Access-Control-Allow-Methods', 'POST');
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
-    res.set('Access-Control-Max-Age', '3600');
-    res.status(204).send('');
+    reply.header('Access-Control-Allow-Methods', 'POST');
+    reply.header('Access-Control-Allow-Headers', 'Content-Type');
+    reply.header('Access-Control-Max-Age', '3600');
+    reply.status(204).send('');
     return;
   }
 
-  func(req, res, next);
+  return func.call(this, request, reply);
 };
 
-exports.hwrSearch = enableCORS(async (req, res) => {
-  if (req.method !== 'POST') {
-    res.status(405).send('');
+exports.hwrSearch = enableCORS(async (request, reply) => {
+  if (request.method !== 'POST') {
+    reply.status(405).send('');
     return;
   }
 
-  if (req.path === '/warmup') {
+  if (request.url === '/warmup') {
     try {
       await loadDataset();
     } catch (e) {
       console.error(e);
-      res.status(500).send('failed to load index');
+      reply.status(500).send('failed to load index');
       return;
     }
-    res.status(200).json({
+    reply.status(200).send({
       dumpTime: datasetMeta.dumpTime,
       numItems: datasetMeta.numItems,
       v: datasetMeta.v,
@@ -154,32 +154,37 @@ exports.hwrSearch = enableCORS(async (req, res) => {
     return;
   }
 
-  if (req.path !== '/') {
-    res.status(404).send('');
+  if (request.url !== '/') {
+    reply.status(404).send('');
     return;
   }
 
-  const { query: queryStr, v = '1' } = req.body;
+  if (typeof request.body !== 'object' || request.body === null) {
+    reply.status(400).send('invalid request');
+    return;
+  }
+  const { query: queryStr, v = '1' } =
+    /** @type {Record<string | number | symbol, unknown>} */(request.body);
   console.debug(`query:`, queryStr);
   const query = parseQuery(queryStr);
   if (!query) {
-    res.status(400).send("invalid parameter 'query'");
+    reply.status(400).send("invalid parameter 'query'");
     return;
   }
   let result;
   try {
     await loadDataset();
     if (v !== datasetMeta.v) {
-      res.status(404).send("invalid parameter 'v'");
+      reply.status(404).send("invalid parameter 'v'");
       return;
     }
     result = performSearch(query);
   } catch (e) {
     console.error(e);
-    res.status(500).send('search error');
+    reply.status(500).send('search error');
     return;
   }
-  res.status(200).json(result);
+  reply.status(200).send(result);
 });
 
 /**

@@ -26,6 +26,7 @@ WORKDIR /app
 COPY . ./
 COPY --from=build /app/node_modules ./node_modules
 
+ENV HOSTNAME=0.0.0.0
 EXPOSE 8080
 
 ENTRYPOINT ["/usr/bin/tini", "--"]

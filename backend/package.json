@@ -3,12 +3,13 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
-    "start": "functions-framework --target=hwrSearch"
+    "start": "node server.js"
   },
   "author": "Kurogoma",
   "license": "MIT",
   "dependencies": {
-    "@google-cloud/functions-framework": "^3.1.2",
+    "@fastify/formbody": "^7.4.0",
+    "fastify": "^4.26.2",
     "hnswlib-node": "^2.1.1"
   }
 }
