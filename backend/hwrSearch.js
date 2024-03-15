@@ -109,35 +109,8 @@ const performSearch = (query) => {
   return result;
 };
 
-/**
- * @param {import('fastify').RouteHandlerMethod} func
- * @return {import('fastify').RouteHandlerMethod}
- */
-const enableCORS = (func) => function (request, reply) {
-  // Set CORS headers for preflight requests
-  // Allows GETs from any origin with the Content-Type header
-  // and caches preflight response for 3600s
-
-  reply.header('Access-Control-Allow-Origin', '*');
-
-  if (request.method === 'OPTIONS') {
-    // Send response to OPTIONS requests
-    reply.header('Access-Control-Allow-Methods', 'POST');
-    reply.header('Access-Control-Allow-Headers', 'Content-Type');
-    reply.header('Access-Control-Max-Age', '3600');
-    reply.status(204).send('');
-    return;
-  }
-
-  return func.call(this, request, reply);
-};
-
-exports.hwrSearch = enableCORS(async (request, reply) => {
-  if (request.method !== 'POST') {
-    reply.status(405).send('');
-    return;
-  }
-
+/** @type {import('fastify').RouteHandlerMethod} */
+exports.hwrSearch = async (request, reply) => {
   if (request.url === '/warmup') {
     try {
       await loadDataset();
@@ -185,7 +158,7 @@ exports.hwrSearch = enableCORS(async (request, reply) => {
     return;
   }
   reply.status(200).send(result);
-});
+};
 
 /**
  * @param {unknown} queryStr
