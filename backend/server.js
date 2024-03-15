@@ -1,13 +1,16 @@
 // @ts-check
 
-const Fastify = require("fastify");
-const { hwrSearch, warmup, parseQuery, InvalidVError } = require("./hwrSearch");
+import Fastify from "fastify";
+import formbody from "@fastify/formbody";
+import cors from "@fastify/cors";
+
+import { hwrSearch, warmup, parseQuery, InvalidVError } from "./hwrSearch.js";
 
 const fastify = Fastify({
   logger: true,
 });
-fastify.register(require("@fastify/formbody"));
-fastify.register(require("@fastify/cors"), {
+fastify.register(formbody);
+fastify.register(cors, {
   origin: "*",
   methods: ["POST"],
   allowedHeaders: ["Content-Type"],

@@ -1,12 +1,14 @@
 // @ts-check
 
-const fs = require('fs');
-const events = require('events');
-const readline = require('readline');
+import { promises, createReadStream } from 'fs';
+import { once } from 'events';
+import { createInterface } from 'readline';
 
-const { HierarchicalNSW } = require('hnswlib-node');
+import hnswlib from 'hnswlib-node';
 
-const { getDataset } = require('./dataset');
+import { getDataset } from './dataset.js';
+
+const { HierarchicalNSW } = hnswlib;
 
 /**
  * @typedef DatasetMeta
@@ -39,7 +41,7 @@ const loadDataset = () => {
      * @return {Promise<DatasetMeta>}
      */
     const loadMetadata = async (path) => {
-      return JSON.parse(await fs.promises.readFile(path, 'utf-8'));
+      return JSON.parse(await promises.readFile(path, 'utf-8'));
     };
     /**
      * @param {string} path
@@ -47,8 +49,8 @@ const loadDataset = () => {
      * @return {Promise<string[]>}
      */
     const loadGlyphNames = async (path, size) => {
-      const inputStream = fs.createReadStream(path);
-      const inputRL = readline.createInterface({
+      const inputStream = createReadStream(path);
+      const inputRL = createInterface({
         input: inputStream,
         crlfDelay: Infinity,
       });
@@ -58,7 +60,7 @@ const loadDataset = () => {
       inputRL.on('line', (input) => {
         result[index++] = input;
       });
-      await events.once(inputRL, 'close');
+      await once(inputRL, 'close');
       return result;
     };
 
@@ -109,7 +111,7 @@ const performSearch = (query) => {
   return result;
 };
 
-exports.warmup = async () => {
+export const warmup = async () => {
   await loadDataset();
   return {
     dumpTime: datasetMeta.dumpTime,
@@ -124,7 +126,7 @@ exports.warmup = async () => {
  * @param {number[]} query 
  * @returns 
  */
-exports.hwrSearch = async (v, query) => {
+export const hwrSearch = async (v, query) => {
   await loadDataset();
   if (v !== datasetMeta.v) {
     throw new InvalidVError();
@@ -132,19 +134,17 @@ exports.hwrSearch = async (v, query) => {
   return performSearch(query);
 };
 
-class InvalidVError extends Error {
+export class InvalidVError extends Error {
   constructor() {
     super('invalid parameter \'v\'');
   }
 }
 
-exports.InvalidVError = InvalidVError;
-
 /**
  * @param {unknown} queryStr
  * @return {number[] | null}
  */
-exports.parseQuery = (queryStr) => {
+export const parseQuery = (queryStr) => {
   if (typeof queryStr !== 'string' || !queryStr) {
     return null;
   }

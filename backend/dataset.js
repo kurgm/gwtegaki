@@ -1,6 +1,6 @@
 // @ts-check
 
-const path = require('path');
+import { join } from 'path';
 
 const DATASET_FILES = /** @type {const} */([
   'names.txt',
@@ -35,7 +35,7 @@ class Dataset {
     if (!DATASET_FILES.includes(subpath)) {
       throw new Error('unknown dataset file');
     }
-    return path.join(this._dirpath, subpath);
+    return join(this._dirpath, subpath);
   }
 
   cleanup() {
@@ -56,7 +56,7 @@ class Dataset {
 const createLocalDirDataset = (dirpath) => Promise.resolve(new Dataset(dirpath));
 
 /** @return {Promise<Dataset>} */
-exports.getDataset = () => {
+export const getDataset = () => {
   const localPath = process.env.HWR_INDEX_PATH;
   if (localPath) {
     console.debug('using local directory dataset:', localPath);
