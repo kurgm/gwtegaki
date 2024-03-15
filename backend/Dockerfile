@@ -16,16 +16,7 @@ RUN npm install --omit=dev \
 FROM node:20-bookworm-slim AS release
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-  curl \
-  ca-certificates \
-  gnupg \
   tini \
-  && echo "deb https://packages.cloud.google.com/apt gcsfuse-bookworm main" | \
-  tee /etc/apt/sources.list.d/gcsfuse.list \
-  && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | \
-  apt-key add - \
-  && apt-get update && apt-get install -y --no-install-recommends \
-  gcsfuse \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
