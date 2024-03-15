@@ -211,7 +211,7 @@ fn transform_buhin_strokes(
             let (min_x, max_x, min_y, max_y) = strokes_bbx(&strokes);
             move |Point { x, y }| {
                 let x = stretch(sx - 200.0, tx, x, min_x, max_x);
-                let y = stretch(sy - 200.0, ty, y, min_y, max_y);
+                let y = stretch(sy, ty, y, min_y, max_y);
                 Point { x, y }
             }
         })
