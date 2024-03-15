@@ -1,0 +1,58 @@
+name: Build / Deploy Frontend
+
+on:
+  push:
+    branches: ["master"]
+    paths-ignore:
+      - "backend/**"
+      - "build_index/**"
+
+  pull_request:
+    branches: ["master"]
+    paths-ignore:
+      - "backend/**"
+      - "build_index/**"
+
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "20"
+      - name: Install Dependencies
+        run: npm install
+      - name: Build Model WASM
+        run: npm run -w model build
+      - name: Build Frontend
+        run: npm run -w frontend build
+      - name: Upload artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: frontend/dist
+
+  deploy:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+
+    permissions:
+      pages: write
+      id-token: write    
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
