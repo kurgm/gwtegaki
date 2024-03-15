@@ -1,0 +1,14 @@
+{
+  "name": "gwtegaki-build_index",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "scripts": {
+    "build": "make"
+  },
+  "author": "Kurogoma",
+  "license": "MIT",
+  "dependencies": {
+    "hnswlib-node": "^2.1.1"
+  }
+}

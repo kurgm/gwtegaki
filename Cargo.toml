@@ -1,0 +1,17 @@
+[workspace]
+
+members = [
+    "model",
+    "build_index",
+    # "backend",
+]
+resolver = "2"
+
+[profile.release]
+# Tell `rustc` to optimize for small code size.
+opt-level = "s"
+lto = true
+
+[profile.release-nonwasm]
+inherits = "release"
+opt-level = 3

@@ -1,15 +1,15 @@
 {
   "name": "gwtegaki-model",
   "private": true,
+  "type": "module",
   "version": "0.1.0",
+  "main": "feature.js",
   "scripts": {
-    "build": "make"
+    "build": "wasm-pack build --no-pack"
   },
   "author": "Kurogoma",
   "license": "MIT",
-  "dependencies": {
-    "annoy": "^3.0.3",
-    "progress": "^2.0.3",
-    "yargs": "^17.3.1"
+  "devDependencies": {
+    "wasm-pack": "^0.12.1"
   }
 }
