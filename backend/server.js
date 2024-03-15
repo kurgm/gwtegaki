@@ -1,7 +1,7 @@
 // @ts-check
 
 const Fastify = require("fastify");
-const { hwrSearch } = require("./hwrSearch");
+const { hwrSearch, warmup } = require("./hwrSearch");
 
 const fastify = Fastify({
   logger: true,
@@ -15,7 +15,8 @@ fastify.register(require("@fastify/cors"), {
   preflightContinue: false,
 });
 
-fastify.post("/*", hwrSearch);
+fastify.post("/warmup", warmup);
+fastify.post("/", hwrSearch);
 
 fastify.listen(
   {

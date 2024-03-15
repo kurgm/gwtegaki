@@ -110,28 +110,23 @@ const performSearch = (query) => {
 };
 
 /** @type {import('fastify').RouteHandlerMethod} */
+exports.warmup = async (request, reply) => {
+  try {
+    await loadDataset();
+  } catch (e) {
+    console.error(e);
+    reply.status(500).send('failed to load index');
+    return;
+  }
+  reply.status(200).send({
+    dumpTime: datasetMeta.dumpTime,
+    numItems: datasetMeta.numItems,
+    v: datasetMeta.v,
+  });
+};
+
+/** @type {import('fastify').RouteHandlerMethod} */
 exports.hwrSearch = async (request, reply) => {
-  if (request.url === '/warmup') {
-    try {
-      await loadDataset();
-    } catch (e) {
-      console.error(e);
-      reply.status(500).send('failed to load index');
-      return;
-    }
-    reply.status(200).send({
-      dumpTime: datasetMeta.dumpTime,
-      numItems: datasetMeta.numItems,
-      v: datasetMeta.v,
-    });
-    return;
-  }
-
-  if (request.url !== '/') {
-    reply.status(404).send('');
-    return;
-  }
-
   if (typeof request.body !== 'object' || request.body === null) {
     reply.status(400).send('invalid request');
     return;
