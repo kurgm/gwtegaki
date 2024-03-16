@@ -1,4 +1,4 @@
-import { strokes_to_feature_array, modelVersion } from 'gwtegaki-model';
+const gwtegakiModelPromise = import('gwtegaki-model');
 
 const canvas = /** @type {HTMLCanvasElement} */(document.getElementById('area'));
 const resultDiv = /** @type {HTMLDivElement} */(document.getElementById('result'));
@@ -186,15 +186,16 @@ function commitStroke() {
   }
   strokes = strokes.concat([stroke]);
   const theStrokes = strokes;
-  const feature = strokes_to_feature_array(strokes).map((x) => +x.toPrecision(7));
-  let queryLength = feature.length;
-  for (; queryLength > 1; queryLength--) {
-    if (feature[queryLength - 1] !== 0) {
-      break;
-    }
-  }
-  const query = feature.slice(0, queryLength).join(' ');
   const searchResultPromise = (async () => {
+    const { strokes_to_feature_array, modelVersion } = await gwtegakiModelPromise;
+    const feature = strokes_to_feature_array(strokes).map((x) => +x.toPrecision(7));
+    let queryLength = feature.length;
+    for (; queryLength > 1; queryLength--) {
+      if (feature[queryLength - 1] !== 0) {
+        break;
+      }
+    }
+    const query = feature.slice(0, queryLength).join(' ');
     /** @type {Result[]} */
     const result = await apiSearch(modelVersion, query);
     if (strokes === theStrokes) {
