@@ -151,10 +151,11 @@ const apiWarmupPromise = (async () => {
 })();
 
 /**
+ * @param {string} v
  * @param {string} query
  * @return {Promise<Result[]>}
  */
-async function apiSearch(query) {
+async function apiSearch(v, query) {
   await apiWarmupPromise;
 
   showMessageIfNoResult('検索中…');
@@ -164,7 +165,7 @@ async function apiSearch(query) {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: new URLSearchParams({
-      v: modelVersion,
+      v,
       query,
     }),
   });
@@ -195,7 +196,7 @@ function commitStroke() {
   const query = feature.slice(0, queryLength).join(' ');
   const searchResultPromise = (async () => {
     /** @type {Result[]} */
-    const result = await apiSearch(query);
+    const result = await apiSearch(modelVersion, query);
     if (strokes === theStrokes) {
       setResult(result);
     }
