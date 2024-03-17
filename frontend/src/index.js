@@ -122,7 +122,7 @@ function endStrokeEventHandler(evt) {
 document.addEventListener('mouseup', endStrokeEventHandler, { passive: true });
 document.addEventListener('touchend', endStrokeEventHandler, { passive: true });
 
-const API_URL = import.meta.env.VITE_SEARCH_API_URL;
+const API_URL = import.meta.env.PUBLIC_SEARCH_API_URL;
 
 /** @return {Promise<void>} */
 async function apiWarmup() {
