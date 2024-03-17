@@ -1,6 +1,7 @@
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 
 import Result from "./Result";
+import Canvas from "./Canvas";
 
 /**
  * @template T
@@ -33,6 +34,23 @@ const createExternalParam = (defaultValue) => {
 };
 
 const {
+  get: getStrokes,
+  set: setStrokes,
+  useExternalParam: useStrokes,
+} = createExternalParam(/** @type {import("./Canvas").Stroke[]} */ ([]));
+
+const {
+  get: getCurrentStroke,
+  set: setCurrentStroke,
+  useExternalParam: useCurrentStroke,
+} = createExternalParam(/** @type {import("./Canvas").Stroke | null} */ (null));
+
+const { set: setOnMouseDown, useExternalParam: useOnMouseDown } =
+  createExternalParam(
+    /** @type {(evt: React.MouseEvent | React.TouchEvent) => void} */ (() => {})
+  );
+
+const {
   get: getSearchResult,
   set: setSearchResult,
   useExternalParam: useSearchResult,
@@ -41,16 +59,29 @@ const {
 );
 
 export default function App() {
+  const canvasRef = useRef(/** @type {SVGSVGElement | null} */ (null));
   useEffect(() => {
-    init();
+    init(canvasRef);
   }, []);
+
+  const strokes = useStrokes();
+  const currentStroke = useCurrentStroke();
+  const visibleStrokes = currentStroke
+    ? strokes.concat([currentStroke])
+    : strokes;
+
+  const onMouseDown = useOnMouseDown();
 
   const result = useSearchResult();
   const loading = false; // TODO
   return (
     <div id="app">
       <div className="writing-area">
-        <canvas id="area" width="200" height="200"></canvas>
+        <Canvas
+          rootRef={canvasRef}
+          strokes={visibleStrokes}
+          onMouseDown={onMouseDown}
+        />
         <div className="writing-tools">
           <button id="clear">消去</button>
           <button id="undo">戻す</button>
@@ -61,12 +92,11 @@ export default function App() {
   );
 }
 
-function init() {
+/**
+ * @param {React.RefObject<SVGSVGElement>} canvasRef
+ */
+function init(canvasRef) {
   const gwtegakiModelPromise = import("gwtegaki-model");
-
-  const canvas = /** @type {HTMLCanvasElement} */ (
-    document.getElementById("area")
-  );
 
   /**
    * @typedef {import("./Result").SearchResult} Result
@@ -94,13 +124,6 @@ function init() {
     showMessage(msg);
   }
 
-  const ctx = canvas.getContext("2d");
-  ctx.lineCap = "round";
-  ctx.lineWidth = 3;
-
-  /** @type {[number, number][] | null} */
-  let stroke = null;
-
   /**
    * @typedef Coord
    * @property {number} x
@@ -110,27 +133,19 @@ function init() {
    * @param {Coord} coord
    */
   function addToStroke({ x, y }) {
+    const stroke = getCurrentStroke();
     if (!stroke) {
       return;
     }
-    stroke.push([x, y]);
-    if (stroke.length >= 2) {
-      const [sx, sy] = stroke[stroke.length - 2];
-      const [tx, ty] = stroke[stroke.length - 1];
-      ctx.beginPath();
-      ctx.moveTo(sx, sy);
-      ctx.lineTo(tx, ty);
-      ctx.stroke();
-    }
+    setCurrentStroke(stroke.concat([[x, y]]));
   }
 
   /**
-   * @param {MouseEvent | TouchEvent} evt
+   * @param {MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent} evt
    */
   function getCoordFromEvent(evt) {
-    const rect = canvas.getBoundingClientRect();
-    const { clientX, clientY } =
-      evt instanceof MouseEvent ? evt : evt.touches[0];
+    const rect = canvasRef.current.getBoundingClientRect();
+    const { clientX, clientY } = "touches" in evt ? evt.touches[0] : evt;
     const x = Math.round(
       ((clientX - rect.left) / (rect.right - rect.left)) * 200
     );
@@ -140,17 +155,16 @@ function init() {
     return { x, y };
   }
 
-  /** @param {MouseEvent | TouchEvent} evt */
+  /** @param {React.MouseEvent | React.TouchEvent} evt */
   function startStrokeEventHandler(evt) {
-    stroke = [];
+    setCurrentStroke([]);
     addToStroke(getCoordFromEvent(evt));
     evt.preventDefault();
   }
-  canvas.addEventListener("mousedown", startStrokeEventHandler);
-  canvas.addEventListener("touchstart", startStrokeEventHandler);
+  setOnMouseDown(startStrokeEventHandler);
   /** @param {MouseEvent | TouchEvent} evt */
   function continueStrokeEventHandler(evt) {
-    if (!stroke) {
+    if (!getCurrentStroke()) {
       return;
     }
     addToStroke(getCoordFromEvent(evt));
@@ -163,11 +177,11 @@ function init() {
   });
   /** @param {MouseEvent | TouchEvent} evt */
   function endStrokeEventHandler(evt) {
-    if (!stroke) {
+    if (!getCurrentStroke()) {
       return;
     }
     commitStroke();
-    stroke = null;
+    setCurrentStroke(null);
   }
   document.addEventListener("mouseup", endStrokeEventHandler, {
     passive: true,
@@ -234,20 +248,19 @@ function init() {
     return response.json();
   }
 
-  /** @type {[number, number][][]} */
-  let strokes = [];
   /** @type {Promise<Result[]>[]} */
   let searchResultPromises = [];
   function commitStroke() {
+    const stroke = getCurrentStroke();
     if (!stroke || stroke.length < 2) {
       return;
     }
-    strokes = strokes.concat([stroke]);
-    const theStrokes = strokes;
+    const theStrokes = getStrokes().concat([stroke]);
+    setStrokes(theStrokes);
     const searchResultPromise = (async () => {
       const { strokes_to_feature_array, modelVersion } =
         await gwtegakiModelPromise;
-      const feature = strokes_to_feature_array(strokes).map(
+      const feature = strokes_to_feature_array(theStrokes).map(
         (x) => +x.toPrecision(7)
       );
       let queryLength = feature.length;
@@ -259,13 +272,13 @@ function init() {
       const query = feature.slice(0, queryLength).join(" ");
       /** @type {Result[]} */
       const result = await apiSearch(modelVersion, query);
-      if (strokes === theStrokes) {
+      if (getStrokes() === theStrokes) {
         setResult(result);
       }
       return result;
     })();
     searchResultPromise.catch((err) => {
-      if (strokes === theStrokes) {
+      if (getStrokes() === theStrokes) {
         showMessage(`エラー: ${err}`);
       }
     });
@@ -273,21 +286,21 @@ function init() {
   }
 
   function clear() {
-    strokes = [];
+    setStrokes([]);
     searchResultPromises = [];
-    ctx.clearRect(0, 0, 200, 200);
     setResult([]);
   }
   document.getElementById("clear").addEventListener("click", () => clear());
 
   async function undo() {
+    let strokes = getStrokes();
     if (strokes.length < 1) {
       return;
     }
     strokes = strokes.slice(0, -1);
+    setStrokes(strokes);
     searchResultPromises.pop();
 
-    redrawStrokes();
     if (strokes.length === 0) {
       setResult([]);
     } else {
@@ -304,21 +317,4 @@ function init() {
   document.getElementById("undo").addEventListener("click", () => {
     undo();
   });
-
-  function redrawStrokes() {
-    ctx.clearRect(0, 0, 200, 200);
-    ctx.beginPath();
-    for (const stroke of strokes) {
-      if (!stroke.length) {
-        continue;
-      }
-      const [sx, sy] = stroke[0];
-      ctx.moveTo(sx, sy);
-      for (let i = 1; i < stroke.length; i++) {
-        const [tx, ty] = stroke[i];
-        ctx.lineTo(tx, ty);
-      }
-    }
-    ctx.stroke();
-  }
 }
