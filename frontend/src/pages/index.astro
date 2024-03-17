@@ -1,5 +1,5 @@
 ---
-
+import App from "../components/App.jsx";
 ---
 
 <!doctype html>
@@ -8,21 +8,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>グリフウィキ手書き検索</title>
-    <script src="../index.js"></script>
   </head>
 
   <body>
     <h1>グリフウィキ手書き検索</h1>
-    <div id="app">
-      <div class="writing-area">
-        <canvas id="area" width="200" height="200"></canvas>
-        <div class="writing-tools">
-          <button id="clear">消去</button>
-          <button id="undo">戻す</button>
-        </div>
-      </div>
-      <div id="result"></div>
-    </div>
+    <App client:load />
     <div class="notes">
       <ul>
         <li>

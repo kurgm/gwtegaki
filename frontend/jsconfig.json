@@ -3,7 +3,9 @@
     "checkJs": true,
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "Node"
+    "moduleResolution": "Node",
+    "jsx": "react-jsx",
+    "jsxImportSource": "react"
   },
   "include": ["src/**/*"]
 }
