@@ -2,6 +2,7 @@ import { useEffect, useRef, useSyncExternalStore } from "react";
 
 import Result from "./Result";
 import Canvas from "./Canvas";
+import style from "./App.module.css";
 
 /**
  * @template T
@@ -75,8 +76,8 @@ export default function App() {
   const result = useSearchResult();
   const loading = false; // TODO
   return (
-    <div id="app">
-      <div className="writing-area">
+    <div className={style.root}>
+      <div className={style.writing}>
         <Canvas
           rootRef={canvasRef}
           strokes={visibleStrokes}

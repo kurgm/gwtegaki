@@ -1,3 +1,5 @@
+import style from "./Result.module.css";
+
 /**
  * @typedef SearchResult
  * @property {string} name
@@ -17,14 +19,14 @@ export default function Result({ result, loading }) {
 
   if (typeof result === "string") {
     return (
-      <div id="result">
-        <div className="result-message">{result}</div>
+      <div className={style.root}>
+        <div className={style.message}>{result}</div>
       </div>
     );
   }
 
   return (
-    <div id="result">
+    <div className={style.root}>
       {result.map(({ name }) => (
         <div key={name}>
           <a href={`https://glyphwiki.org/wiki/${name}`}>
