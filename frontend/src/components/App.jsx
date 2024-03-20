@@ -1,118 +1,136 @@
-import { useEffect, useSyncExternalStore } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useState,
+  useTransition,
+} from "react";
 
 import Result from "./Result";
 import Canvas from "./Canvas";
 import style from "./App.module.css";
+import { Loadable, useLoadable } from "../utils/Loadable";
 
 /**
- * @template T
- * @param {T} defaultValue
+ * @typedef {(
+ *   | { type: "beforeInit" }
+ *   | { type: "warming" }
+ *   | { type: "ready"; error?: string }
+ *   | { type: "running" }
+ * )} AppState
  */
-const createExternalParam = (defaultValue) => {
-  let currentValue = defaultValue;
-  /** @type {(() => void)[]} */
-  const callbacks = [];
-
-  const get = () => currentValue;
-  /** @param {T} value */
-  const set = (value) => {
-    currentValue = value;
-    callbacks.forEach((cb) => cb());
-  };
-  /** @param {() => void} cb */
-  const subscribe = (cb) => {
-    callbacks.push(cb);
-    return () => {
-      const index = callbacks.indexOf(cb);
-      if (index !== -1) {
-        callbacks.splice(index, 1);
-      }
-    };
-  };
-
-  const useExternalParam = () => useSyncExternalStore(subscribe, get, get);
-  return { get, set, useExternalParam };
-};
-
-const {
-  get: getStrokes,
-  set: setStrokes,
-  useExternalParam: useStrokes,
-} = createExternalParam(/** @type {import("./Canvas").Stroke[]} */ ([]));
-
-const { set: setCommitStroke, useExternalParam: useCommitStroke } =
-  createExternalParam(
-    /** @type {(stroke: import("./Canvas").Stroke) => void} */ (() => {})
-  );
-
-const {
-  get: getSearchResult,
-  set: setSearchResult,
-  useExternalParam: useSearchResult,
-} = createExternalParam(
-  /** @type {import("./Result").SearchResult[] | string} */ ([])
-);
 
 export default function App() {
+  const [appState, setAppState] = useState(
+    /** @type {AppState} */ ({ type: "beforeInit" })
+  );
   useEffect(() => {
-    init();
+    setAppState({ type: "warming" });
+    apiWarmup().then(
+      () => {
+        setAppState({ type: "ready" });
+      },
+      (e) => {
+        setAppState({ type: "ready", error: String(e) });
+      }
+    );
   }, []);
 
-  const strokes = useStrokes();
+  const { strokes, addStroke, clearStrokes, undoStroke } = useStrokeState();
 
-  const commitStroke = useCommitStroke();
+  const commitStroke = useCallback(
+    /**
+     * @param {import("./Canvas").Stroke} stroke
+     */
+    (stroke) => {
+      setAppState((appState) =>
+        appState.type === "ready" ? { type: "running" } : appState
+      );
+      addStroke(stroke);
+    },
+    [addStroke]
+  );
 
-  const result = useSearchResult();
-  const loading = false; // TODO
+  const resultLoadable = useSearchResultLoadable(strokes);
+  /** @type {string} */
+  const fallbackMessage = (() => {
+    switch (appState.type) {
+      case "beforeInit":
+        return "";
+      case "warming":
+        return "サーバ起動中… (20〜30秒かかることがあります)";
+      case "ready":
+        if (appState.error) {
+          return `サーバ起動エラー: ${appState.error}`;
+        }
+        return "準備完了";
+      case "running":
+        if (strokes.length === 0) {
+          return "";
+        }
+        return "検索中…";
+    }
+  })();
+
+  const [prevLoadable, setPrevLoadable] = useState(resultLoadable);
+  const [isPending, startTransition] = useTransition();
+  useEffect(() => {
+    if (resultLoadable !== prevLoadable) {
+      startTransition(() => {
+        setPrevLoadable(resultLoadable);
+      });
+    }
+  }, [resultLoadable, prevLoadable, startTransition]);
   return (
     <div className={style.root}>
       <div className={style.writing}>
         <Canvas strokes={strokes} commitStroke={commitStroke} />
-        <div className="writing-tools">
-          <button id="clear">消去</button>
-          <button id="undo">戻す</button>
+        <div>
+          <button onClick={clearStrokes}>消去</button>
+          <button onClick={undoStroke}>戻す</button>
         </div>
       </div>
-      <Result result={result} loading={loading} />
+      <Suspense fallback={<Result result={fallbackMessage} loading={true} />}>
+        <LoadResult
+          loadable={prevLoadable}
+          fallbackMessage={fallbackMessage}
+          loading={isPending || appState.type === "warming"}
+        />
+      </Suspense>
     </div>
   );
 }
 
-function init() {
-  const gwtegakiModelPromise = import("gwtegaki-model");
+function useStrokeState() {
+  const [strokes, setStrokes] = useState(
+    /** @type {import("./Canvas").Stroke[]} */ ([])
+  );
+  const addStroke = useCallback(
+    /**
+     * @param {import("./Canvas").Stroke} stroke
+     */
+    (stroke) => {
+      // clone
+      stroke = stroke.slice();
+      setStrokes((strokes) => strokes.concat([stroke]));
+    },
+    []
+  );
+  const clearStrokes = useCallback(() => {
+    setStrokes([]);
+  }, []);
+  const undoStroke = useCallback(() => {
+    setStrokes((strokes) => strokes.slice(0, -1));
+  }, []);
+  return { strokes, addStroke, clearStrokes, undoStroke };
+}
 
-  /**
-   * @typedef {import("./Result").SearchResult} Result
-   */
-  /** @param {Result[]} result */
-  function setResult(result) {
-    setSearchResult(result);
-  }
+const API_URL = import.meta.env.PUBLIC_SEARCH_API_URL;
 
-  /**
-   * @param {string} msg
-   */
-  function showMessage(msg) {
-    setSearchResult(msg);
-  }
-
-  /**
-   * @param {string} msg
-   */
-  function showMessageIfNoResult(msg) {
-    const currentResult = getSearchResult();
-    if (Array.isArray(currentResult) && currentResult.length > 0) {
-      return;
-    }
-    showMessage(msg);
-  }
-
-  setCommitStroke(commitStroke);
-
-  const API_URL = import.meta.env.PUBLIC_SEARCH_API_URL;
-
-  /** @return {Promise<void>} */
-  async function apiWarmup() {
+const apiWarmup = (() => {
+  /** @type {Promise<void>} */
+  let promise;
+  async function warmup() {
     const response = await fetch(API_URL + "warmup", {
       method: "POST",
     });
@@ -130,112 +148,100 @@ function init() {
     ).textContent = `のうち${meta.numItems}個`;
   }
 
-  showMessage("サーバ起動中… (20〜30秒かかることがあります)");
-  const apiWarmupPromise = (async () => {
-    try {
-      await apiWarmup();
-    } catch (e) {
-      showMessageIfNoResult(`サーバ起動エラー: ${e}`);
-      return;
+  return () => {
+    if (!promise) {
+      promise = warmup();
     }
-    showMessageIfNoResult("準備完了");
-  })();
+    return promise;
+  };
+})();
 
-  /**
-   * @param {string} v
-   * @param {string} query
-   * @return {Promise<Result[]>}
-   */
-  async function apiSearch(v, query) {
-    await apiWarmupPromise;
+/**
+ * @typedef {import("./Result").SearchResult} Result
+ */
+/**
+ * @param {string} v
+ * @param {string} query
+ * @return {Promise<Result[]>}
+ */
+async function apiSearch(v, query) {
+  await apiWarmup().catch(() => {});
 
-    showMessageIfNoResult("検索中…");
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({
-        v,
-        query,
-      }),
-    });
-    if (!response.ok) {
-      const text = await response.text().catch((err) => String(err));
-      throw new Error(`search error: ${text}`);
-    }
-    return response.json();
-  }
-
-  /** @type {Promise<Result[]>[]} */
-  let searchResultPromises = [];
-  /**
-   * @param {import("./Canvas").Stroke} stroke
-   */
-  function commitStroke(stroke) {
-    if (stroke.length < 2) {
-      return;
-    }
-    const theStrokes = getStrokes().concat([stroke]);
-    setStrokes(theStrokes);
-    const searchResultPromise = (async () => {
-      const { strokes_to_feature_array, modelVersion } =
-        await gwtegakiModelPromise;
-      const feature = strokes_to_feature_array(theStrokes).map(
-        (x) => +x.toPrecision(7)
-      );
-      let queryLength = feature.length;
-      for (; queryLength > 1; queryLength--) {
-        if (feature[queryLength - 1] !== 0) {
-          break;
-        }
-      }
-      const query = feature.slice(0, queryLength).join(" ");
-      /** @type {Result[]} */
-      const result = await apiSearch(modelVersion, query);
-      if (getStrokes() === theStrokes) {
-        setResult(result);
-      }
-      return result;
-    })();
-    searchResultPromise.catch((err) => {
-      if (getStrokes() === theStrokes) {
-        showMessage(`エラー: ${err}`);
-      }
-    });
-    searchResultPromises.push(searchResultPromise);
-  }
-
-  function clear() {
-    setStrokes([]);
-    searchResultPromises = [];
-    setResult([]);
-  }
-  document.getElementById("clear").addEventListener("click", () => clear());
-
-  async function undo() {
-    let strokes = getStrokes();
-    if (strokes.length < 1) {
-      return;
-    }
-    strokes = strokes.slice(0, -1);
-    setStrokes(strokes);
-    searchResultPromises.pop();
-
-    if (strokes.length === 0) {
-      setResult([]);
-    } else {
-      /** @type {Result[]} */
-      let result;
-      try {
-        result = await searchResultPromises[searchResultPromises.length - 1];
-      } catch (err) {
-        return;
-      }
-      setResult(result);
-    }
-  }
-  document.getElementById("undo").addEventListener("click", () => {
-    undo();
+  const response = await fetch(API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      v,
+      query,
+    }),
   });
+  if (!response.ok) {
+    const text = await response.text().catch((err) => String(err));
+    throw new Error(`search error: ${text}`);
+  }
+  return response.json();
+}
+
+const gwtegakiModelPromise = import("gwtegaki-model");
+/**
+ * @param {import("./Canvas").Stroke[]} theStrokes
+ */
+async function callSearchApi(theStrokes) {
+  const { strokes_to_feature_array, modelVersion } = await gwtegakiModelPromise;
+  const feature = strokes_to_feature_array(theStrokes).map(
+    (x) => +x.toPrecision(7)
+  );
+  let queryLength = feature.length;
+  for (; queryLength > 1; queryLength--) {
+    if (feature[queryLength - 1] !== 0) {
+      break;
+    }
+  }
+  const query = feature.slice(0, queryLength).join(" ");
+  return await apiSearch(modelVersion, query);
+}
+
+/** @type {Loadable<undefined>} */
+const emptyResultLoadable = new Loadable(Promise.resolve(undefined));
+
+/** @type {WeakMap<import("./Canvas").Stroke, Loadable<import("./Result").SearchResult[]>>} */
+const resultCache = new WeakMap();
+
+/**
+ * @param {import("./Canvas").Stroke[]} strokes
+ * @returns {Loadable<import("./Result").SearchResult[] | undefined>}
+ */
+function useSearchResultLoadable(strokes) {
+  const stroke = strokes[strokes.length - 1];
+  if (!stroke) {
+    return emptyResultLoadable;
+  }
+  let loadable = resultCache.get(stroke);
+  if (!loadable) {
+    loadable = new Loadable(callSearchApi(strokes));
+    resultCache.set(stroke, loadable);
+  }
+  return loadable;
+}
+
+/**
+ * @typedef LoadResultProps
+ * @property {Loadable<import("./Result").SearchResult[] | undefined>} loadable
+ * @property {string} fallbackMessage
+ * @property {boolean} loading
+ */
+/**
+ * @param {LoadResultProps} param
+ */
+function LoadResult({ loadable, fallbackMessage, loading }) {
+  const state = useLoadable(loadable);
+  if (state.state === "error") {
+    return <Result result={`エラー: ${state.error}`} loading={loading} />;
+  }
+  if (state.value === undefined) {
+    return <Result result={fallbackMessage || []} loading={loading} />;
+  }
+  return <Result result={state.value} loading={loading} />;
 }
