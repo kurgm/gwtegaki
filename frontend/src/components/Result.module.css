@@ -9,12 +9,25 @@
   position: relative;
 }
 
+.root[aria-busy="true"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 5px;
+  background-color: rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+}
+
 .root .message {
   position: absolute;
   left: 10px;
   right: 10px;
   top: 10px;
   bottom: 10px;
+  z-index: 1;
 }
 
 .root img {

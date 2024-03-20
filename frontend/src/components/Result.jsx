@@ -14,9 +14,6 @@ import style from "./Result.module.css";
  * @param {ResultProps} props
  */
 export default function Result({ result, loading }) {
-  // TODO
-  void loading;
-
   if (typeof result === "string") {
     return (
       <div className={style.root}>
@@ -26,7 +23,7 @@ export default function Result({ result, loading }) {
   }
 
   return (
-    <div className={style.root}>
+    <div className={style.root} aria-busy={loading}>
       {result.map(({ name }) => (
         <div key={name}>
           <a href={`https://glyphwiki.org/wiki/${name}`}>
