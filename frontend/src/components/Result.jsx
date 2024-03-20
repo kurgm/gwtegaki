@@ -1,13 +1,8 @@
 import style from "./Result.module.css";
 
 /**
- * @typedef SearchResult
- * @property {string} name
- * @property {number} distance
- */
-/**
  * @typedef ResultProps
- * @property {SearchResult[] | string} result
+ * @property {import("../api").SearchResponse | string} result
  * @property {boolean} loading
  */
 /**

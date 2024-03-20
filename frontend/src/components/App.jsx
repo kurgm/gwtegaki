@@ -10,6 +10,7 @@ import Result from "./Result";
 import Canvas from "./Canvas";
 import style from "./App.module.css";
 import { Loadable, useLoadable } from "../utils/Loadable";
+import { callApiSearch, callApiWarmup } from "../api";
 
 /**
  * @typedef {(
@@ -125,21 +126,11 @@ function useStrokeState() {
   return { strokes, addStroke, clearStrokes, undoStroke };
 }
 
-const API_URL = import.meta.env.PUBLIC_SEARCH_API_URL;
-
 const apiWarmup = (() => {
   /** @type {Promise<void>} */
   let promise;
   async function warmup() {
-    const response = await fetch(API_URL + "warmup", {
-      method: "POST",
-    });
-    if (!response.ok) {
-      const text = await response.text().catch((err) => String(err));
-      throw new Error(`server warmup error: ${text}`);
-    }
-    /** @type {{ dumpTime: number; numItems: number; v: string; }} */
-    const meta = await response.json();
+    const meta = await callApiWarmup();
     document.getElementById("meta_dump_time").textContent = `${new Date(
       meta.dumpTime
     ).toLocaleString("ja-JP", { timeZoneName: "short" })}時点で`;
@@ -156,62 +147,28 @@ const apiWarmup = (() => {
   };
 })();
 
-/**
- * @typedef {import("./Result").SearchResult} Result
- */
-/**
- * @param {string} v
- * @param {string} query
- * @return {Promise<Result[]>}
- */
-async function apiSearch(v, query) {
-  await apiWarmup().catch(() => {});
-
-  const response = await fetch(API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({
-      v,
-      query,
-    }),
-  });
-  if (!response.ok) {
-    const text = await response.text().catch((err) => String(err));
-    throw new Error(`search error: ${text}`);
-  }
-  return response.json();
-}
-
 const gwtegakiModelPromise = import("gwtegaki-model");
 /**
- * @param {import("./Canvas").Stroke[]} theStrokes
+ * @param {import("./Canvas").Stroke[]} strokes
  */
-async function callSearchApi(theStrokes) {
+async function searchByStrokes(strokes) {
   const { strokes_to_feature_array, modelVersion } = await gwtegakiModelPromise;
-  const feature = strokes_to_feature_array(theStrokes).map(
-    (x) => +x.toPrecision(7)
-  );
-  let queryLength = feature.length;
-  for (; queryLength > 1; queryLength--) {
-    if (feature[queryLength - 1] !== 0) {
-      break;
-    }
-  }
-  const query = feature.slice(0, queryLength).join(" ");
-  return await apiSearch(modelVersion, query);
+  const feature = strokes_to_feature_array(strokes).map((x) => Math.fround(x));
+  const query = feature.join(" ");
+
+  await apiWarmup().catch(() => {});
+  return await callApiSearch(modelVersion, query);
 }
 
 /** @type {Loadable<undefined>} */
 const emptyResultLoadable = new Loadable(Promise.resolve(undefined));
 
-/** @type {WeakMap<import("./Canvas").Stroke, Loadable<import("./Result").SearchResult[]>>} */
+/** @type {WeakMap<import("./Canvas").Stroke, Loadable<import("../api").SearchResponse>>} */
 const resultCache = new WeakMap();
 
 /**
  * @param {import("./Canvas").Stroke[]} strokes
- * @returns {Loadable<import("./Result").SearchResult[] | undefined>}
+ * @returns {Loadable<import("../api").SearchResponse | undefined>}
  */
 function useSearchResultLoadable(strokes) {
   const stroke = strokes[strokes.length - 1];
@@ -220,7 +177,7 @@ function useSearchResultLoadable(strokes) {
   }
   let loadable = resultCache.get(stroke);
   if (!loadable) {
-    loadable = new Loadable(callSearchApi(strokes));
+    loadable = new Loadable(searchByStrokes(strokes));
     resultCache.set(stroke, loadable);
   }
   return loadable;
@@ -228,7 +185,7 @@ function useSearchResultLoadable(strokes) {
 
 /**
  * @typedef LoadResultProps
- * @property {Loadable<import("./Result").SearchResult[] | undefined>} loadable
+ * @property {Loadable<import("../api").SearchResponse | undefined>} loadable
  * @property {string} fallbackMessage
  * @property {boolean} loading
  */
