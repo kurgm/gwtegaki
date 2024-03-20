@@ -1,4 +1,4 @@
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 
 import Result from "./Result";
 import Canvas from "./Canvas";
@@ -40,15 +40,9 @@ const {
   useExternalParam: useStrokes,
 } = createExternalParam(/** @type {import("./Canvas").Stroke[]} */ ([]));
 
-const {
-  get: getCurrentStroke,
-  set: setCurrentStroke,
-  useExternalParam: useCurrentStroke,
-} = createExternalParam(/** @type {import("./Canvas").Stroke | null} */ (null));
-
-const { set: setOnMouseDown, useExternalParam: useOnMouseDown } =
+const { set: setCommitStroke, useExternalParam: useCommitStroke } =
   createExternalParam(
-    /** @type {(evt: React.MouseEvent | React.TouchEvent) => void} */ (() => {})
+    /** @type {(stroke: import("./Canvas").Stroke) => void} */ (() => {})
   );
 
 const {
@@ -60,29 +54,20 @@ const {
 );
 
 export default function App() {
-  const canvasRef = useRef(/** @type {SVGSVGElement | null} */ (null));
   useEffect(() => {
-    init(canvasRef);
+    init();
   }, []);
 
   const strokes = useStrokes();
-  const currentStroke = useCurrentStroke();
-  const visibleStrokes = currentStroke
-    ? strokes.concat([currentStroke])
-    : strokes;
 
-  const onMouseDown = useOnMouseDown();
+  const commitStroke = useCommitStroke();
 
   const result = useSearchResult();
   const loading = false; // TODO
   return (
     <div className={style.root}>
       <div className={style.writing}>
-        <Canvas
-          rootRef={canvasRef}
-          strokes={visibleStrokes}
-          onMouseDown={onMouseDown}
-        />
+        <Canvas strokes={strokes} commitStroke={commitStroke} />
         <div className="writing-tools">
           <button id="clear">消去</button>
           <button id="undo">戻す</button>
@@ -93,10 +78,7 @@ export default function App() {
   );
 }
 
-/**
- * @param {React.RefObject<SVGSVGElement>} canvasRef
- */
-function init(canvasRef) {
+function init() {
   const gwtegakiModelPromise = import("gwtegaki-model");
 
   /**
@@ -125,71 +107,7 @@ function init(canvasRef) {
     showMessage(msg);
   }
 
-  /**
-   * @typedef Coord
-   * @property {number} x
-   * @property {number} y
-   */
-  /**
-   * @param {Coord} coord
-   */
-  function addToStroke({ x, y }) {
-    const stroke = getCurrentStroke();
-    if (!stroke) {
-      return;
-    }
-    setCurrentStroke(stroke.concat([[x, y]]));
-  }
-
-  /**
-   * @param {MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent} evt
-   */
-  function getCoordFromEvent(evt) {
-    const rect = canvasRef.current.getBoundingClientRect();
-    const { clientX, clientY } = "touches" in evt ? evt.touches[0] : evt;
-    const x = Math.round(
-      ((clientX - rect.left) / (rect.right - rect.left)) * 200
-    );
-    const y = Math.round(
-      ((clientY - rect.top) / (rect.bottom - rect.top)) * 200
-    );
-    return { x, y };
-  }
-
-  /** @param {React.MouseEvent | React.TouchEvent} evt */
-  function startStrokeEventHandler(evt) {
-    setCurrentStroke([]);
-    addToStroke(getCoordFromEvent(evt));
-    evt.preventDefault();
-  }
-  setOnMouseDown(startStrokeEventHandler);
-  /** @param {MouseEvent | TouchEvent} evt */
-  function continueStrokeEventHandler(evt) {
-    if (!getCurrentStroke()) {
-      return;
-    }
-    addToStroke(getCoordFromEvent(evt));
-  }
-  document.addEventListener("mousemove", continueStrokeEventHandler, {
-    passive: true,
-  });
-  document.addEventListener("touchmove", continueStrokeEventHandler, {
-    passive: true,
-  });
-  /** @param {MouseEvent | TouchEvent} evt */
-  function endStrokeEventHandler(evt) {
-    if (!getCurrentStroke()) {
-      return;
-    }
-    commitStroke();
-    setCurrentStroke(null);
-  }
-  document.addEventListener("mouseup", endStrokeEventHandler, {
-    passive: true,
-  });
-  document.addEventListener("touchend", endStrokeEventHandler, {
-    passive: true,
-  });
+  setCommitStroke(commitStroke);
 
   const API_URL = import.meta.env.PUBLIC_SEARCH_API_URL;
 
@@ -251,9 +169,11 @@ function init(canvasRef) {
 
   /** @type {Promise<Result[]>[]} */
   let searchResultPromises = [];
-  function commitStroke() {
-    const stroke = getCurrentStroke();
-    if (!stroke || stroke.length < 2) {
+  /**
+   * @param {import("./Canvas").Stroke} stroke
+   */
+  function commitStroke(stroke) {
+    if (stroke.length < 2) {
       return;
     }
     const theStrokes = getStrokes().concat([stroke]);

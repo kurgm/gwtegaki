@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useRef, useState } from "react";
 import style from "./Canvas.module.css";
 
 /**
@@ -5,23 +6,85 @@ import style from "./Canvas.module.css";
  */
 /**
  * @typedef CanvasProps
- * @property {React.Ref<SVGSVGElement>=} rootRef
  * @property {Stroke[]} strokes
- * @property {(evt: React.MouseEvent | React.TouchEvent) => void} onMouseDown
+ * @property {(stroke: Stroke) => void} commitStroke
  */
 /**
  * @param {CanvasProps} props
  */
-export default function Canvas({ rootRef, strokes, onMouseDown }) {
+export default function Canvas({ strokes, commitStroke }) {
+  const svgRef = useRef(/** @type {SVGSVGElement | null} */ (null));
+
+  const [currentStroke, setCurrentStroke] = useState(
+    /** @type {Stroke | undefined} */ (undefined)
+  );
+  const startStrokeEventHandler = useCallback(
+    /**
+     * @param {React.MouseEvent | React.TouchEvent} evt
+     */
+    (evt) => {
+      if (!svgRef.current) return;
+      const newStroke = [getCoordFromEvent(evt, svgRef.current)];
+      setCurrentStroke(newStroke);
+    },
+    []
+  );
+  const continueStrokeEventHandler = useCallback(
+    /**
+     * @param {MouseEvent | TouchEvent} evt
+     */
+    (evt) => {
+      setCurrentStroke((stroke) => {
+        if (!svgRef.current) return;
+        const point = getCoordFromEvent(evt, svgRef.current);
+        return stroke?.concat([point]);
+      });
+    },
+    []
+  );
+  useEffect(() => {
+    document.addEventListener("mousemove", continueStrokeEventHandler, {
+      passive: true,
+    });
+    document.addEventListener("touchmove", continueStrokeEventHandler, {
+      passive: true,
+    });
+    return () => {
+      document.removeEventListener("mousemove", continueStrokeEventHandler);
+      document.removeEventListener("touchmove", continueStrokeEventHandler);
+    };
+  }, [continueStrokeEventHandler]);
+
+  const endStrokeEventHandler = useCallback(() => {
+    if (!currentStroke) return;
+    commitStroke(currentStroke);
+    setCurrentStroke(undefined);
+  }, [currentStroke, commitStroke]);
+  useEffect(() => {
+    document.addEventListener("mouseup", endStrokeEventHandler, {
+      passive: true,
+    });
+    document.addEventListener("touchend", endStrokeEventHandler, {
+      passive: true,
+    });
+    return () => {
+      document.removeEventListener("mouseup", endStrokeEventHandler);
+      document.removeEventListener("touchend", endStrokeEventHandler);
+    };
+  }, [endStrokeEventHandler]);
+
+  const visibleStrokes = currentStroke
+    ? strokes.concat([currentStroke])
+    : strokes;
   return (
     <svg
-      ref={rootRef}
+      ref={svgRef}
       className={style.area}
       width="200"
       height="200"
       viewBox="0 0 200 200"
-      onMouseDown={onMouseDown}
-      onTouchStart={onMouseDown}
+      onMouseDown={startStrokeEventHandler}
+      onTouchStart={startStrokeEventHandler}
     >
       <path
         d="
@@ -35,7 +98,7 @@ export default function Canvas({ rootRef, strokes, onMouseDown }) {
         stroke="rgba(120,120,120,.5)"
         strokeWidth="1"
       />
-      {strokes.map((stroke, i) => (
+      {visibleStrokes.map((stroke, i) => (
         <polyline
           key={i}
           points={stroke.map((p) => `${p[0]},${p[1]}`).join(" ")}
@@ -48,4 +111,19 @@ export default function Canvas({ rootRef, strokes, onMouseDown }) {
       ))}
     </svg>
   );
+}
+
+/**
+ * @param {MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent} evt
+ * @param {Element} canvasElement
+ * @returns {import("gwtegaki-model").Point}
+ */
+function getCoordFromEvent(evt, canvasElement) {
+  const rect = canvasElement.getBoundingClientRect();
+  const { clientX, clientY } = "touches" in evt ? evt.touches[0] : evt;
+  const x = Math.round(
+    ((clientX - rect.left) / (rect.right - rect.left)) * 200
+  );
+  const y = Math.round(((clientY - rect.top) / (rect.bottom - rect.top)) * 200);
+  return [x, y];
 }
