@@ -7,7 +7,7 @@
     "api": "HWR_INDEX_PATH=../build_index/dataset PORT=5000 npm start --prefix ../backend",
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro build",
+    "build": "astro check && astro build",
     "preview": "astro preview",
     "astro": "astro",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -19,10 +19,12 @@
     "not IE 11"
   ],
   "devDependencies": {
+    "@astrojs/check": "^0.5.10",
     "@astrojs/react": "^3.1.0",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "astro": "^4.5.5",
+    "typescript": "^5.4.3",
     "vite-plugin-top-level-await": "^1.4.1",
     "vite-plugin-wasm": "^3.3.0"
   },
