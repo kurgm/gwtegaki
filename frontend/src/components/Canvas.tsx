@@ -1,28 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+
+import { type Point, type Stroke } from "gwtegaki-model";
+
 import style from "./Canvas.module.css";
 
-/**
- * @typedef {import("gwtegaki-model").Stroke} Stroke
- */
-/**
- * @typedef CanvasProps
- * @property {Stroke[]} strokes
- * @property {(stroke: Stroke) => void} commitStroke
- */
-/**
- * @param {CanvasProps} props
- */
-export default function Canvas({ strokes, commitStroke }) {
-  const svgRef = useRef(/** @type {SVGSVGElement | null} */ (null));
+interface CanvasProps {
+  strokes: Stroke[];
+  commitStroke: (stroke: Stroke) => void;
+}
+export default function Canvas({ strokes, commitStroke }: CanvasProps) {
+  const svgRef = useRef<SVGSVGElement>(null);
 
-  const [currentStroke, setCurrentStroke] = useState(
-    /** @type {Stroke | undefined} */ (undefined)
+  const [currentStroke, setCurrentStroke] = useState<Stroke | undefined>(
+    undefined
   );
   const startStrokeEventHandler = useCallback(
-    /**
-     * @param {React.MouseEvent | React.TouchEvent} evt
-     */
-    (evt) => {
+    (evt: React.MouseEvent | React.TouchEvent) => {
       if (!svgRef.current) return;
       const newStroke = [getCoordFromEvent(evt, svgRef.current)];
       setCurrentStroke(newStroke);
@@ -30,10 +23,7 @@ export default function Canvas({ strokes, commitStroke }) {
     []
   );
   const continueStrokeEventHandler = useCallback(
-    /**
-     * @param {MouseEvent | TouchEvent} evt
-     */
-    (evt) => {
+    (evt: MouseEvent | TouchEvent) => {
       setCurrentStroke((stroke) => {
         if (!svgRef.current) return;
         const point = getCoordFromEvent(evt, svgRef.current);
@@ -113,12 +103,10 @@ export default function Canvas({ strokes, commitStroke }) {
   );
 }
 
-/**
- * @param {MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent} evt
- * @param {Element} canvasElement
- * @returns {import("gwtegaki-model").Point}
- */
-function getCoordFromEvent(evt, canvasElement) {
+function getCoordFromEvent(
+  evt: MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent,
+  canvasElement: Element
+): Point {
   const rect = canvasElement.getBoundingClientRect();
   const { clientX, clientY } = "touches" in evt ? evt.touches[0] : evt;
   const x = Math.round(
@@ -127,3 +115,6 @@ function getCoordFromEvent(evt, canvasElement) {
   const y = Math.round(((clientY - rect.top) / (rect.bottom - rect.top)) * 200);
   return [x, y];
 }
+
+export { type Point, type Stroke };
+

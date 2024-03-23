@@ -6,26 +6,22 @@ import {
   useTransition,
 } from "react";
 
-import Result from "./Result";
-import Canvas from "./Canvas";
-import style from "./App.module.css";
-import { Loadable, useLoadable } from "../utils/Loadable";
-import { callApiSearch, callApiWarmup } from "../api";
+import { callApiSearch, callApiWarmup, type SearchResponse } from "../api";
 import { metaAtom } from "../store";
+import { Loadable, useLoadable } from "../utils/Loadable";
+import Canvas, { type Stroke } from "./Canvas";
+import Result from "./Result";
 
-/**
- * @typedef {(
- *   | { type: "beforeInit" }
- *   | { type: "warming" }
- *   | { type: "ready"; error?: string }
- *   | { type: "running" }
- * )} AppState
- */
+import style from "./App.module.css";
+
+type AppState =
+  | { type: "beforeInit" }
+  | { type: "warming" }
+  | { type: "ready"; error?: string }
+  | { type: "running" };
 
 export default function App() {
-  const [appState, setAppState] = useState(
-    /** @type {AppState} */ ({ type: "beforeInit" })
-  );
+  const [appState, setAppState] = useState<AppState>({ type: "beforeInit" });
   useEffect(() => {
     setAppState({ type: "warming" });
     apiWarmup().then(
@@ -41,10 +37,7 @@ export default function App() {
   const { strokes, addStroke, clearStrokes, undoStroke } = useStrokeState();
 
   const commitStroke = useCallback(
-    /**
-     * @param {import("./Canvas").Stroke} stroke
-     */
-    (stroke) => {
+    (stroke: Stroke) => {
       setAppState((appState) =>
         appState.type === "ready" ? { type: "running" } : appState
       );
@@ -54,8 +47,7 @@ export default function App() {
   );
 
   const resultLoadable = useSearchResultLoadable(strokes);
-  /** @type {string} */
-  const fallbackMessage = (() => {
+  const fallbackMessage: string = (() => {
     switch (appState.type) {
       case "beforeInit":
         return "";
@@ -104,20 +96,12 @@ export default function App() {
 }
 
 function useStrokeState() {
-  const [strokes, setStrokes] = useState(
-    /** @type {import("./Canvas").Stroke[]} */ ([])
-  );
-  const addStroke = useCallback(
-    /**
-     * @param {import("./Canvas").Stroke} stroke
-     */
-    (stroke) => {
-      // clone
-      stroke = stroke.slice();
-      setStrokes((strokes) => strokes.concat([stroke]));
-    },
-    []
-  );
+  const [strokes, setStrokes] = useState<Stroke[]>([]);
+  const addStroke = useCallback((stroke: Stroke) => {
+    // clone
+    stroke = stroke.slice();
+    setStrokes((strokes) => strokes.concat([stroke]));
+  }, []);
   const clearStrokes = useCallback(() => {
     setStrokes([]);
   }, []);
@@ -128,8 +112,7 @@ function useStrokeState() {
 }
 
 const apiWarmup = (() => {
-  /** @type {Promise<void>} */
-  let promise;
+  let promise: Promise<void>;
   async function warmup() {
     const meta = await callApiWarmup();
     metaAtom.set(meta);
@@ -144,10 +127,7 @@ const apiWarmup = (() => {
 })();
 
 const gwtegakiModelPromise = import("gwtegaki-model");
-/**
- * @param {import("./Canvas").Stroke[]} strokes
- */
-async function searchByStrokes(strokes) {
+async function searchByStrokes(strokes: Stroke[]) {
   const { strokes_to_feature_array, modelVersion } = await gwtegakiModelPromise;
   const feature = strokes_to_feature_array(strokes).map((x) => Math.fround(x));
   const query = feature.join(" ");
@@ -156,17 +136,15 @@ async function searchByStrokes(strokes) {
   return await callApiSearch(modelVersion, query);
 }
 
-/** @type {Loadable<undefined>} */
-const emptyResultLoadable = new Loadable(Promise.resolve(undefined));
+const emptyResultLoadable: Loadable<undefined> = new Loadable(
+  Promise.resolve(undefined)
+);
 
-/** @type {WeakMap<import("./Canvas").Stroke, Loadable<import("../api").SearchResponse>>} */
-const resultCache = new WeakMap();
+const resultCache: WeakMap<Stroke, Loadable<SearchResponse>> = new WeakMap();
 
-/**
- * @param {import("./Canvas").Stroke[]} strokes
- * @returns {Loadable<import("../api").SearchResponse | undefined>}
- */
-function useSearchResultLoadable(strokes) {
+function useSearchResultLoadable(
+  strokes: Stroke[]
+): Loadable<SearchResponse | undefined> {
   const stroke = strokes[strokes.length - 1];
   if (!stroke) {
     return emptyResultLoadable;
@@ -179,16 +157,12 @@ function useSearchResultLoadable(strokes) {
   return loadable;
 }
 
-/**
- * @typedef LoadResultProps
- * @property {Loadable<import("../api").SearchResponse | undefined>} loadable
- * @property {string} fallbackMessage
- * @property {boolean} loading
- */
-/**
- * @param {LoadResultProps} param
- */
-function LoadResult({ loadable, fallbackMessage, loading }) {
+interface LoadResultProps {
+  loadable: Loadable<SearchResponse | undefined>;
+  fallbackMessage: string;
+  loading: boolean;
+}
+function LoadResult({ loadable, fallbackMessage, loading }: LoadResultProps) {
   const state = useLoadable(loadable);
   if (state.state === "error") {
     return <Result result={`エラー: ${state.error}`} loading={loading} />;

@@ -1,14 +1,12 @@
 const API_URL = import.meta.env.PUBLIC_SEARCH_API_URL;
 
-/**
- * @typedef WarmupResponse
- * @property {number} dumpTime
- * @property {number} numItems
- * @property {string} v
- */
+export interface WarmupResponse {
+  dumpTime: number;
+  numItems: number;
+  v: string;
+}
 
-/** @return {Promise<WarmupResponse>} */
-export async function callApiWarmup() {
+export async function callApiWarmup(): Promise<WarmupResponse> {
   const response = await fetch(new URL("warmup", API_URL), {
     method: "POST",
   });
@@ -19,19 +17,16 @@ export async function callApiWarmup() {
   return await response.json();
 }
 
-/**
- * @typedef SearchResult
- * @property {string} name
- * @property {number} distance
- */
-/** @typedef {SearchResult[]} SearchResponse */
+export interface SearchResult {
+  name: string;
+  distance: number;
+}
+export type SearchResponse = SearchResult[];
 
-/**
- * @param {string} v
- * @param {string} query
- * @return {Promise<SearchResponse>}
- */
-export async function callApiSearch(v, query) {
+export async function callApiSearch(
+  v: string,
+  query: string
+): Promise<SearchResponse> {
   const response = await fetch(API_URL, {
     method: "POST",
     headers: {

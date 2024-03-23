@@ -1,14 +1,13 @@
+import { type SearchResponse } from "../api";
+
 import style from "./Result.module.css";
 
-/**
- * @typedef ResultProps
- * @property {import("../api").SearchResponse | string} result
- * @property {boolean} loading
- */
-/**
- * @param {ResultProps} props
- */
-export default function Result({ result, loading }) {
+interface ResultProps {
+  result: SearchResponse | string;
+  loading: boolean;
+}
+
+export default function Result({ result, loading }: ResultProps) {
   if (typeof result === "string") {
     return (
       <div className={style.root}>
