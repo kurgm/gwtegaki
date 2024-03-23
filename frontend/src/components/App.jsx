@@ -11,6 +11,7 @@ import Canvas from "./Canvas";
 import style from "./App.module.css";
 import { Loadable, useLoadable } from "../utils/Loadable";
 import { callApiSearch, callApiWarmup } from "../api";
+import { metaAtom } from "../store";
 
 /**
  * @typedef {(
@@ -131,12 +132,7 @@ const apiWarmup = (() => {
   let promise;
   async function warmup() {
     const meta = await callApiWarmup();
-    document.getElementById("meta_dump_time").textContent = `${new Date(
-      meta.dumpTime
-    ).toLocaleString("ja-JP", { timeZoneName: "short" })}時点で`;
-    document.getElementById(
-      "meta_nglyphs"
-    ).textContent = `のうち${meta.numItems}個`;
+    metaAtom.set(meta);
   }
 
   return () => {
