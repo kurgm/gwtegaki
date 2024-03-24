@@ -22,7 +22,7 @@ export default function Result({ result, loading }: ResultProps) {
     <div className={style.root} aria-busy={loading}>
       {result.map(({ name }) => (
         <div key={name}>
-          <a href={`https://glyphwiki.org/wiki/${name}`}>
+          <a href={`https://glyphwiki.org/wiki/${name}`} target="_blank" rel="noreferrer">
             <GlyphImage name={name} />
           </a>
         </div>
