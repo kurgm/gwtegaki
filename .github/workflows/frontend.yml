@@ -32,6 +32,9 @@ jobs:
         run: npm ci
       - name: Build Model WASM
         run: npm run -w model build
+      - name: Lint Frontend
+        if: github.event_name == 'pull_request'
+        run: npm run -w frontend lint
       - name: Build Frontend
         run: npm run -w frontend build
       - name: Upload artifact

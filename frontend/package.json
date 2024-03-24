@@ -5,8 +5,12 @@
   "type": "module",
   "scripts": {
     "api": "HWR_INDEX_PATH=../build_index/dataset PORT=5000 npm start --prefix ../backend",
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "lint": "eslint src",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Kurogoma",
@@ -16,8 +20,23 @@
     "not IE 11"
   ],
   "devDependencies": {
-    "vite": "^5.1.1",
+    "@astrojs/check": "^0.5.10",
+    "@astrojs/react": "^3.1.0",
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "astro": "^4.5.5",
+    "eslint": "^8.57.0",
+    "eslint-plugin-astro": "^0.32.0",
+    "eslint-plugin-react": "^7.34.1",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "typescript": "^5.4.3",
+    "typescript-eslint": "^7.3.1",
     "vite-plugin-top-level-await": "^1.4.1",
     "vite-plugin-wasm": "^3.3.0"
+  },
+  "dependencies": {
+    "nanostores": "^0.10.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   }
 }

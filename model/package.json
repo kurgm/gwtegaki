@@ -4,6 +4,7 @@
   "type": "module",
   "version": "0.1.0",
   "main": "feature.js",
+  "types": "feature.d.ts",
   "scripts": {
     "build": "wasm-pack build --no-pack"
   },

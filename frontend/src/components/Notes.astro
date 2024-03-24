@@ -1,0 +1,64 @@
+---
+
+---
+
+<div class="notes">
+  <ul>
+    <li>
+      <a href="https://glyphwiki.org/">グリフウィキ</a>に<span
+        id="meta_dump_time"></span>登録されているグリフ<span id="meta_nglyphs"
+      ></span>から手書きで検索することができます。
+    </li>
+    <li>検索したい字を枠いっぱいにバランス良く書きます。</li>
+    <li>ハネを書く必要はありません。</li>
+    <li>
+      （明朝体で）垂直な画はなるべく垂直に、水平な画はなるべく水平に、斜めな画（点・払いなど）は斜めに書きます。
+    </li>
+    <li>
+      グリフデータと同じ画数で、<del>同じ書き順で</del>書くことが重要です。
+      <ul>
+        <li>
+          「口」の2画目などは本来つなげて書きますが、横と縦の2回に分けて書きます。「口」は4画で、「阝」は4画で、「幺」は5画で書きます。
+        </li>
+      </ul>
+    </li>
+    <li>
+      <ins>グリフデータと違う書き順でも検索できるようになりました。</ins>
+    </li>
+    <li>
+      検索結果が字のバランスに影響されやすいので、見つからないときはバランスを変えながら何度か検索してみてください。
+    </li>
+    <li>
+      ユーザ占有グリフ、非漢字グリフ、hitsujun-グリフは検索対象から外しています。
+    </li>
+    <li>
+      最新版が削除されているグリフを部品として引用するグリフは正しく検索できないことがあります。
+    </li>
+    <li>
+      リソース節約のため、検索が長らく行われないとサーバが終了した状態になります。サーバが起動して検索ができるようになるまで20〜30秒かかることがありますが、ひとたび起動すればスムーズに検索できると思います。（要改善と認識しています）
+    </li>
+  </ul>
+</div>
+
+<style>
+  .notes {
+    padding: 10px;
+    font-size: 90%;
+    max-width: 50em;
+    margin: 0 auto;
+  }
+</style>
+
+<script>
+  import { metaAtom } from "../store.js";
+
+  metaAtom.subscribe((meta) => {
+    if (!meta) return;
+    const dumpTimeText = `${new Date(meta.dumpTime).toLocaleString("ja-JP", {
+      timeZoneName: "short",
+    })}時点で`;
+    const nGlyphsText = `のうち${meta.numItems}個`;
+    document.getElementById("meta_dump_time")!.textContent = dumpTimeText;
+    document.getElementById("meta_nglyphs")!.textContent = nGlyphsText;
+  });
+</script>
