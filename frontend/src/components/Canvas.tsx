@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { type Point, type Stroke } from "gwtegaki-model";
+import type { Point, Stroke } from "gwtegaki-model";
 
 import style from "./Canvas.module.css";
 
@@ -116,5 +116,4 @@ function getCoordFromEvent(
   return [x, y];
 }
 
-export { type Point, type Stroke };
-
+export type { Point, Stroke };

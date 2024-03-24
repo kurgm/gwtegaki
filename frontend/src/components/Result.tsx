@@ -1,4 +1,4 @@
-import { type SearchResponse } from "../api";
+import type { SearchResponse } from "../api";
 
 import style from "./Result.module.css";
 
