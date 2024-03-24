@@ -1,5 +1,7 @@
 import type { SearchResponse } from "../api";
 
+import GlyphImage from "./GlyphImage";
+
 import style from "./Result.module.css";
 
 interface ResultProps {
@@ -21,11 +23,7 @@ export default function Result({ result, loading }: ResultProps) {
       {result.map(({ name }) => (
         <div key={name}>
           <a href={`https://glyphwiki.org/wiki/${name}`}>
-            <img
-              src={`https://glyphwiki.org/glyph/${name}.50px.png`}
-              alt={name}
-              title={name}
-            />
+            <GlyphImage name={name} />
           </a>
         </div>
       ))}
