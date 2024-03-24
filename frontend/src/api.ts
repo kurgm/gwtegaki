@@ -14,7 +14,7 @@ export async function callApiWarmup(): Promise<WarmupResponse> {
     const text = await response.text().catch((err) => String(err));
     throw new Error(`server warmup error: ${text}`);
   }
-  return await response.json();
+  return (await response.json()) as WarmupResponse;
 }
 
 export interface SearchResult {
@@ -41,5 +41,5 @@ export async function callApiSearch(
     const text = await response.text().catch((err) => String(err));
     throw new Error(`search error: ${text}`);
   }
-  return response.json();
+  return (await response.json()) as SearchResponse;
 }

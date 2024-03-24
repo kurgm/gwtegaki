@@ -119,7 +119,7 @@ const apiWarmup = (() => {
   }
 
   return () => {
-    if (!promise) {
+    if (promise === undefined) {
       promise = warmup();
     }
     return promise;
@@ -132,15 +132,15 @@ async function searchByStrokes(strokes: Stroke[]) {
   const feature = strokes_to_feature_array(strokes).map((x) => Math.fround(x));
   const query = feature.join(" ");
 
-  await apiWarmup().catch(() => {});
+  await apiWarmup().catch(() => {
+    /* ignore */
+  });
   return await callApiSearch(modelVersion, query);
 }
 
-const emptyResultLoadable: Loadable<undefined> = new Loadable(
-  Promise.resolve(undefined)
-);
+const emptyResultLoadable = new Loadable<undefined>(Promise.resolve(undefined));
 
-const resultCache: WeakMap<Stroke, Loadable<SearchResponse>> = new WeakMap();
+const resultCache = new WeakMap<Stroke, Loadable<SearchResponse>>();
 
 function useSearchResultLoadable(
   strokes: Stroke[]
@@ -165,7 +165,7 @@ interface LoadResultProps {
 function LoadResult({ loadable, fallbackMessage, loading }: LoadResultProps) {
   const state = useLoadable(loadable);
   if (state.state === "error") {
-    return <Result result={`エラー: ${state.error}`} loading={loading} />;
+    return <Result result={`エラー: ${String(state.error)}`} loading={loading} />;
   }
   if (state.value === undefined) {
     return <Result result={fallbackMessage || []} loading={loading} />;

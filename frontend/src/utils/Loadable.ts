@@ -14,7 +14,7 @@ export class Loadable<T> {
       (value) => {
         this.state = { state: "success", value };
       },
-      (error) => {
+      (error: unknown) => {
         this.state = { state: "error", error };
       }
     );
