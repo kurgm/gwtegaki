@@ -1,5 +1,12 @@
 ---
+import FramedImage from "./FramedImage";
 import GlyphImage from "./GlyphImage";
+
+import image_u31d5 from "../assets/glyphs/u31d5.svg";
+import image_u53e3 from "../assets/glyphs/u53e3.svg";
+import image_u961d from "../assets/glyphs/u961d.svg";
+import image_u5e7a from "../assets/glyphs/u5e7a.svg";
+import image_u6c35_j from "../assets/glyphs/u6c35-j.svg";
 ---
 
 <div class="notes">
@@ -15,21 +22,36 @@ import GlyphImage from "./GlyphImage";
     </li>
     <li>
       グリフデータと同じ画数で書くことが重要です。
-      <ul>
-        <li>
-          「口」の2画目 <GlyphImage name="u31d5" /> などは本来つなげて書きますが、横と縦の2回に分けて書きます。
-          <GlyphImage name="u53e3" /> は4画で、 <GlyphImage name="u961d" /> は4画で、
-          <GlyphImage name="u5e7a" /> は5画で、 <GlyphImage name="u6c35-j" /> は4画で書きます。
-        </li>
-        <li>一方で <GlyphImage name="u4e5a" /> はつなげて（1画で）書きます。</li>
-        <li>
-          <GlyphImage name="u31da" />
-          <GlyphImage name="u31c1" />
-          <GlyphImage name="u31c2" />
-          <GlyphImage name="u31df" />
-          の終筆のハネを書く必要はありません。
-        </li>
-      </ul>
+      <details open>
+        <summary>詳細</summary>
+        <ul>
+          <li>
+            「口」の2画目 <FramedImage
+              src={image_u31d5.src}
+              alt="u31d5"
+              title="u31d5"
+            /> などは本来つなげて書きますが、横と縦の2回に分けて書きます。
+            <FramedImage src={image_u53e3.src} alt="u53e3" title="u53e3" /> は4画で、
+            <FramedImage src={image_u961d.src} alt="u961d" title="u961d" /> は4画で、
+            <FramedImage src={image_u5e7a.src} alt="u5e7a" title="u5e7a" /> は5画で、
+            <FramedImage
+              src={image_u6c35_j.src}
+              alt="u6c35-j"
+              title="u6c35-j"
+            /> は4画で書きます。
+          </li>
+          <li>
+            一方で <GlyphImage name="u4e5a" /> はつなげて（1画で）書きます。
+          </li>
+          <li>
+            <GlyphImage name="u31da" />
+            <GlyphImage name="u31c1" />
+            <GlyphImage name="u31c2" />
+            <GlyphImage name="u31df" />
+            の終筆のハネを書く必要はありません。
+          </li>
+        </ul>
+      </details>
     </li>
     <li>書き順は検索結果に影響しません。</li>
     <li>
@@ -66,6 +88,18 @@ import GlyphImage from "./GlyphImage";
     font-size: 90%;
     max-width: 50em;
     margin: 0 auto;
+  }
+
+  .notes details {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin: 0.5em 0;
+    padding: 0.5em;
+  }
+
+  .notes details summary {
+    cursor: pointer;
+    font-weight: bold;
   }
 </style>
 
