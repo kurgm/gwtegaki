@@ -1,4 +1,4 @@
-import style from "./GlyphImage.module.css";
+import FramedImage from "./FramedImage";
 
 interface GlyphImageProps {
   name: string;
@@ -6,8 +6,7 @@ interface GlyphImageProps {
 
 export default function GlyphImage({ name }: GlyphImageProps) {
   return (
-    <img
-      className={style.image}
+    <FramedImage
       src={`https://glyphwiki.org/glyph/${name}.50px.png`}
       alt={name}
       title={name}
