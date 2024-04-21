@@ -26,62 +26,59 @@ let hnsw;
 /** @type {string[]} */
 let glyphNames;
 
-/** @type {Promise<void> | null} */
-let loadPromise = null;
-/** @return {Promise<void>} */
-const loadDataset = () => {
-  if (loadPromise) {
-    return loadPromise;
+{
+  /**
+   * @param {string} path
+   * @return {Promise<DatasetMeta>}
+   */
+  const loadMetadata = async (path) => {
+    return JSON.parse(await promises.readFile(path, 'utf-8'));
+  };
+  /**
+   * @param {string} path
+   * @param {number} size
+   * @return {Promise<string[]>}
+   */
+  const loadGlyphNames = async (path, size) => {
+    const inputStream = createReadStream(path);
+    const inputRL = createInterface({
+      input: inputStream,
+      crlfDelay: Infinity,
+    });
+    /** @type {string[]} */
+    const result = Array(size);
+    let index = 0;
+    inputRL.on('line', (input) => {
+      result[index++] = input;
+    });
+    await once(inputRL, 'close');
+    return result;
+  };
+
+  const dataset = await getDataset();
+
+  try {
+    console.debug('load metadata start');
+    datasetMeta = await loadMetadata(
+      dataset.getEphemeralPath('metadata.json')
+    );
+    console.debug('load metadata complete');
+
+    console.debug('load namelist start');
+    glyphNames = await loadGlyphNames(
+      dataset.getEphemeralPath('names.txt'),
+      datasetMeta.numItems
+    );
+    console.debug('load namelist complete');
+
+    console.debug('load hnsw index start');
+    hnsw = new HierarchicalNSW(datasetMeta.metric, datasetMeta.dimen);
+    await hnsw.readIndex(dataset.getEphemeralPath('features.ann'));
+    console.debug('load hnsw index complete');
+  } finally {
+    await dataset?.cleanup();
   }
-  return loadPromise = (async () => {
-    const dataset = await getDataset();
-
-    /**
-     * @param {string} path
-     * @return {Promise<DatasetMeta>}
-     */
-    const loadMetadata = async (path) => {
-      return JSON.parse(await promises.readFile(path, 'utf-8'));
-    };
-    /**
-     * @param {string} path
-     * @param {number} size
-     * @return {Promise<string[]>}
-     */
-    const loadGlyphNames = async (path, size) => {
-      const inputStream = createReadStream(path);
-      const inputRL = createInterface({
-        input: inputStream,
-        crlfDelay: Infinity,
-      });
-      /** @type {string[]} */
-      const result = Array(size);
-      let index = 0;
-      inputRL.on('line', (input) => {
-        result[index++] = input;
-      });
-      await once(inputRL, 'close');
-      return result;
-    };
-
-    try {
-      console.debug('load metadata start');
-      datasetMeta = await loadMetadata(dataset.getEphemeralPath('metadata.json'));
-      console.debug('load metadata complete');
-
-      console.debug('load namelist start');
-      glyphNames = await loadGlyphNames(dataset.getEphemeralPath('names.txt'), datasetMeta.numItems);
-      console.debug('load namelist complete');
-
-      console.debug('load hnsw index start');
-      hnsw = new HierarchicalNSW(datasetMeta.metric, datasetMeta.dimen);
-      await hnsw.readIndex(dataset.getEphemeralPath('features.ann'));
-      console.debug('load hnsw index complete');
-    } finally {
-      await dataset?.cleanup();
-    }
-  })();
-};
+}
 
 /**
  * @typedef SearchResult
@@ -112,7 +109,6 @@ const performSearch = (query) => {
 };
 
 export const warmup = async () => {
-  await loadDataset();
   return {
     dumpTime: datasetMeta.dumpTime,
     numItems: datasetMeta.numItems,
@@ -121,13 +117,12 @@ export const warmup = async () => {
 };
 
 /**
- * 
- * @param {unknown} v 
- * @param {number[]} query 
- * @returns 
+ *
+ * @param {unknown} v
+ * @param {number[]} query
+ * @returns
  */
 export const hwrSearch = async (v, query) => {
-  await loadDataset();
   if (v !== datasetMeta.v) {
     throw new InvalidVError();
   }
