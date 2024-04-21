@@ -29,4 +29,4 @@ EXPOSE 8080
 
 ENTRYPOINT ["/usr/bin/tini", "--", "/nodejs/bin/node"]
 
-CMD ["server.js"]
+CMD ["src/server.js"]
