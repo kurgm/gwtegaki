@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
+ENV HWR_TEMP_INDEX_PATH /tmp/dataset
 ENV GCS_MNT_DIR /mnt/gcs
 
 WORKDIR /app
@@ -31,4 +32,4 @@ EXPOSE 8080
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
 
-CMD ["/app/bin/run.sh"]
+CMD ["node", "server.js"]

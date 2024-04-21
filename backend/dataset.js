@@ -1,5 +1,6 @@
 // @ts-check
 
+import { cp, rm } from 'fs/promises';
 import { join } from 'path';
 
 const DATASET_FILES = /** @type {const} */([
@@ -55,13 +56,46 @@ class Dataset {
  */
 const createLocalDirDataset = (dirpath) => Promise.resolve(new Dataset(dirpath));
 
+/**
+ * @param {string} dirpath
+ * @param {string} temppath
+ * @return {Promise<Dataset>}
+ */
+const createLocalCopyDirDataset = async (dirpath, temppath) => {
+  console.debug('copy to local temp dataset start');
+  await cp(dirpath, temppath, { recursive: true });
+  console.debug('copy to local temp dataset complete');
+
+  return new Dataset(temppath, async () => {
+    console.debug('remove local temp dataset start');
+    await rm(temppath, { recursive: true });
+    console.debug('remove local temp dataset complete');
+  });
+};
+
 /** @return {Promise<Dataset>} */
 export const getDataset = () => {
-  const localPath = process.env.HWR_INDEX_PATH;
-  if (localPath) {
-    console.debug('using local directory dataset:', localPath);
-    return createLocalDirDataset(localPath);
+  {
+    const localPath = process.env.HWR_INDEX_PATH;
+    if (localPath) {
+      console.debug('using local directory dataset:', localPath);
+      return createLocalDirDataset(localPath);
+    }
   }
 
+  {
+    const tempPath = process.env.HWR_TEMP_INDEX_PATH;
+
+    const gcsMountDir = process.env.GCS_MNT_DIR;
+    const indexGcsDir = process.env.INDEX_GCS_DIR;
+    const remotePath =
+      process.env.HWR_REMOTE_INDEX_PATH ||
+      (gcsMountDir && indexGcsDir ? join(gcsMountDir, indexGcsDir) : null);
+
+    if (tempPath && remotePath) {
+      console.debug('using remote dataset:', remotePath);
+      return createLocalCopyDirDataset(remotePath, tempPath);
+    }
+  }
   throw new Error('no dataset available');
 };
