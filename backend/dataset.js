@@ -13,12 +13,12 @@ const DATASET_FILES = /** @type {const} */([
 class Dataset {
   /**
    * @param {string} dirpath
-   * @param {function(): void=} cleanup
+   * @param {function(): Promise<void>=} cleanup
    */
   constructor(dirpath, cleanup) {
     /** @private @const @type {string} */
     this._dirpath = dirpath;
-    /** @private @const @type {function(): void=} */
+    /** @private @const @type {function(): Promise<void>=} */
     this._cleanup = cleanup;
     /** @private @type {boolean} */
     this._cleaned = false;
@@ -38,9 +38,9 @@ class Dataset {
     return join(this._dirpath, subpath);
   }
 
-  cleanup() {
+  async cleanup() {
     this._cleaned = true;
-    this._cleanup?.();
+    await this._cleanup?.();
   }
 
   /** @type {boolean} */

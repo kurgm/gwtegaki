@@ -78,7 +78,7 @@ const loadDataset = () => {
       await hnsw.readIndex(dataset.getEphemeralPath('features.ann'));
       console.debug('load hnsw index complete');
     } finally {
-      dataset?.cleanup();
+      await dataset?.cleanup();
     }
   })();
 };
