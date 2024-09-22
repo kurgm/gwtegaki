@@ -1,30 +1,22 @@
 import eslint from "@eslint/js";
-import eslintPluginAstro from "eslint-plugin-astro";
+// import eslintPluginAstro from "eslint-plugin-astro";
 import hooksPlugin from "eslint-plugin-react-hooks";
-import reactRecommended from "eslint-plugin-react/configs/recommended.js";
-import reactJsxRuntime from "eslint-plugin-react/configs/jsx-runtime.js";
+import reactPlugin from "eslint-plugin-react";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
-  {
-    languageOptions: {
-      parserOptions: {
-        project: true,
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
-  },
+  // ...eslintPluginAstro.configs["flat/recommended"],
   {
     // Exclude .astro files
     files: ["**/*.{js,mjs,cjs,jsx,mjsx,ts,tsx,mtsx}"],
-    ...reactRecommended,
+    ...reactPlugin.configs.flat.recommended,
   },
   {
     files: ["**/*.{js,mjs,cjs,jsx,mjsx,ts,tsx,mtsx}"],
-    ...reactJsxRuntime,
+    ...reactPlugin.configs.flat["jsx-runtime"],
   },
   {
     settings: {
@@ -33,11 +25,18 @@ export default tseslint.config(
       },
     },
   },
-  ...eslintPluginAstro.configs["flat/recommended"],
   {
     plugins: {
       "react-hooks": hooksPlugin,
     },
     rules: hooksPlugin.configs.recommended.rules,
+  },
+  {
+    languageOptions: {
+      parserOptions: {
+        project: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
   },
 );

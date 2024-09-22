@@ -27,6 +27,7 @@ export function useLoadable<T>(
   | { state: "success"; value: T; error?: undefined }
   | { state: "error"; value?: undefined; error: unknown } {
   if (loadable.state.state === "loading") {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error
     throw loadable.promise;
   }
   return loadable.state;
