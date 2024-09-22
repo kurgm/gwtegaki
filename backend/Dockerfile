@@ -16,8 +16,8 @@ RUN npm install --omit=dev \
 
 FROM gcr.io/distroless/nodejs20-debian12 AS release
 
-ENV HWR_TEMP_INDEX_PATH /tmp/dataset
-ENV GCS_MNT_DIR /mnt/gcs
+ENV HWR_TEMP_INDEX_PATH=/tmp/dataset
+ENV GCS_MNT_DIR=/mnt/gcs
 
 WORKDIR /app
 COPY . ./
