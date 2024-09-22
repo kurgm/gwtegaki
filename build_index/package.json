@@ -9,6 +9,6 @@
   "author": "Kurogoma",
   "license": "MIT",
   "dependencies": {
-    "hnswlib-node": "^2.1.1"
+    "hnswlib-node": "^3.0.0"
   }
 }
