@@ -1,7 +1,0 @@
-interface ImportMetaEnv {
-  readonly PUBLIC_SEARCH_API_URL: string;
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
-}
