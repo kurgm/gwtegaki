@@ -1,4 +1,4 @@
-FROM node:20-bookworm-slim AS build
+FROM node:22-bookworm-slim AS build
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
   python3 \
@@ -14,7 +14,7 @@ COPY package.json package*.json ./
 RUN npm install --omit=dev \
   && npm cache clean --force
 
-FROM gcr.io/distroless/nodejs20-debian12 AS release
+FROM gcr.io/distroless/nodejs22-debian12 AS release
 
 ENV HWR_TEMP_INDEX_PATH=/tmp/dataset
 ENV GCS_MNT_DIR=/mnt/gcs
