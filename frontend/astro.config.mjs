@@ -1,5 +1,5 @@
 import react from "@astrojs/react";
-import { defineConfig } from "astro/config";
+import { defineConfig, envField } from "astro/config";
 import wasm from "vite-plugin-wasm";
 import topLevelAwait from "vite-plugin-top-level-await";
 
@@ -11,4 +11,13 @@ export default defineConfig({
     plugins: [wasm(), topLevelAwait()],
   },
   integrations: [react()],
+  env: {
+    schema: {
+      SEARCH_API_URL: envField.string({
+        context: "client",
+        access: "public",
+        url: true,
+      }),
+    },
+  },
 });

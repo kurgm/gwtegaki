@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.PUBLIC_SEARCH_API_URL;
+import { SEARCH_API_URL as API_URL } from "astro:env/client";
 
 export interface WarmupResponse {
   dumpTime: number;
