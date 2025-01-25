@@ -11,7 +11,7 @@
     "build": "astro check && astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "lint": "eslint src",
+    "lint": "astro sync && eslint src",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Kurogoma",
