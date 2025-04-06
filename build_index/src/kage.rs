@@ -30,7 +30,7 @@ impl BuhinRecurser {
     fn kage_line_to_strokes(&mut self, line: &str, dump: &Dump) -> Vec<Stroke> {
         let numeric_data: Vec<f64> = line
             .split(':')
-            .map(|s| parse_cell(s))
+            .map(parse_cell)
             .chain(std::iter::repeat(0.0))
             .take(11)
             .collect();
@@ -170,10 +170,10 @@ fn slash_stroke(
 }
 
 fn strokes_bbx(strokes: &[Stroke]) -> (f64, f64, f64, f64) {
-    let mut min_x = std::f64::MAX;
-    let mut max_x = std::f64::MIN;
-    let mut min_y = std::f64::MAX;
-    let mut max_y = std::f64::MIN;
+    let mut min_x = f64::MAX;
+    let mut max_x = f64::MIN;
+    let mut min_y = f64::MAX;
+    let mut max_y = f64::MIN;
     for stroke in strokes {
         for point in &stroke.0 {
             min_x = min_x.min(point.x);
