@@ -25,12 +25,7 @@ export default tseslint.config(
       },
     },
   },
-  {
-    plugins: {
-      "react-hooks": hooksPlugin,
-    },
-    rules: hooksPlugin.configs.recommended.rules,
-  },
+  hooksPlugin.configs["recommended-latest"],
   {
     languageOptions: {
       parserOptions: {

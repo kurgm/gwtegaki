@@ -118,12 +118,7 @@ const apiWarmup = (() => {
     metaAtom.set(meta);
   }
 
-  return () => {
-    if (promise === undefined) {
-      promise = warmup();
-    }
-    return promise;
-  };
+  return () => (promise ??= warmup());
 })();
 
 const gwtegakiModelPromise = import("gwtegaki-model");
@@ -165,7 +160,9 @@ interface LoadResultProps {
 function LoadResult({ loadable, fallbackMessage, loading }: LoadResultProps) {
   const state = useLoadable(loadable);
   if (state.state === "error") {
-    return <Result result={`エラー: ${String(state.error)}`} loading={loading} />;
+    return (
+      <Result result={`エラー: ${String(state.error)}`} loading={loading} />
+    );
   }
   if (state.value === undefined) {
     return <Result result={fallbackMessage || []} loading={loading} />;
