@@ -6,13 +6,13 @@ use std::io::{self, Write};
 use std::os::unix::fs::MetadataExt;
 use std::path::PathBuf;
 
-use gwtegaki_model::{strokes_to_feature_array, FEATURE_COLSIZE, MODEL_VERSION};
+use gwtegaki_model::{FEATURE_COLSIZE, MODEL_VERSION, strokes_to_feature_array};
 use indicatif::ProgressBar;
 use itertools::Itertools;
 
 use crate::dump_reader::Dump;
 use crate::glyph_name::is_target_glyph_name;
-use crate::kage::{kage_is_alias, BuhinRecurser};
+use crate::kage::{BuhinRecurser, kage_is_alias};
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();

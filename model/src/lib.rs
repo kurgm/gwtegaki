@@ -1,6 +1,6 @@
 use wasm_bindgen::prelude::*;
 
-pub use crate::model::{strokes_to_feature_array, FEATURE_COLSIZE, MODEL_VERSION};
+pub use crate::model::{FEATURE_COLSIZE, MODEL_VERSION, strokes_to_feature_array};
 pub use crate::stroke::{Point, Stroke};
 
 mod indexed_feature;
