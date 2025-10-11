@@ -53,7 +53,7 @@ fastify.post("/", async (request, reply) => {
   }
   const { query: queryStr, v = "1" } =
     /** @type {Record<string | number | symbol, unknown>} */ (request.body);
-  request.log.debug(`query: %o`, queryStr);
+  request.log.debug(`query: %o`, /** @type {any} */ (queryStr));
   const query = parseQuery(queryStr);
   if (!query) {
     reply.status(400).send("invalid parameter 'query'");
