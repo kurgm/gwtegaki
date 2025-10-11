@@ -26,7 +26,7 @@ export default defineConfig(
       },
     },
   },
-  hooksPlugin.configs["recommended-latest"],
+  hooksPlugin.configs.flat.recommended,
   {
     languageOptions: {
       parserOptions: {

@@ -15,15 +15,13 @@ import Result from "./Result";
 import style from "./App.module.css";
 
 type AppState =
-  | { type: "beforeInit" }
   | { type: "warming" }
   | { type: "ready"; error?: string }
   | { type: "running" };
 
 export default function App() {
-  const [appState, setAppState] = useState<AppState>({ type: "beforeInit" });
+  const [appState, setAppState] = useState<AppState>({ type: "warming" });
   useEffect(() => {
-    setAppState({ type: "warming" });
     apiWarmup().then(
       () => {
         setAppState({ type: "ready" });
@@ -49,8 +47,6 @@ export default function App() {
   const resultLoadable = useSearchResultLoadable(strokes);
   const fallbackMessage: string = (() => {
     switch (appState.type) {
-      case "beforeInit":
-        return "";
       case "warming":
         return "サーバ起動中… (20〜30秒かかることがあります)";
       case "ready":
