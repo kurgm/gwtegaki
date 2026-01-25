@@ -9,6 +9,12 @@ import Notes from "../components/Notes.astro";
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>グリフウィキ手書き検索</title>
+    <style is:global>
+      html,
+      body {
+        overscroll-behavior: none;
+      }
+    </style>
   </head>
 
   <body>
@@ -17,9 +23,3 @@ import Notes from "../components/Notes.astro";
     <Notes />
   </body>
 </html>
-
-<style is:global>
-  html, body {
-    overscroll-behavior: none;
-  }
-</style>
