@@ -6,7 +6,7 @@
   "main": "feature.js",
   "types": "feature.d.ts",
   "scripts": {
-    "build": "wasm-pack build --no-pack"
+    "build": "wasm-pack build --no-pack --profile release-wasm"
   },
   "author": "Kurogoma",
   "license": "MIT",
