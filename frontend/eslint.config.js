@@ -1,6 +1,6 @@
 import eslint from "@eslint/js";
 import { defineConfig } from "eslint/config"
-// import eslintPluginAstro from "eslint-plugin-astro";
+import eslintPluginAstro from "eslint-plugin-astro";
 import hooksPlugin from "eslint-plugin-react-hooks";
 import reactPlugin from "eslint-plugin-react";
 import tseslint from "typescript-eslint";
@@ -9,7 +9,7 @@ export default defineConfig(
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
-  // ...eslintPluginAstro.configs["flat/recommended"],
+  ...eslintPluginAstro.configs.recommended,
   {
     // Exclude .astro files
     files: ["**/*.{js,mjs,cjs,jsx,mjsx,ts,tsx,mtsx}"],

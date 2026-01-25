@@ -6,11 +6,11 @@
   "main": "feature.js",
   "types": "feature.d.ts",
   "scripts": {
-    "build": "wasm-pack build --no-pack"
+    "build": "wasm-pack build --no-pack --profile release-wasm"
   },
   "author": "Kurogoma",
   "license": "MIT",
   "devDependencies": {
-    "wasm-pack": "^0.13.1"
+    "wasm-pack": "^0.14.0"
   }
 }
